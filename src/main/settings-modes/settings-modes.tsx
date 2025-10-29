@@ -1,5 +1,5 @@
 import React, {memo} from "react";
-import {IMode, ISettingsModesProps} from "./settings-modes.interface";
+import {ISettingsModesProps} from "./settings-modes.interface";
 import Checkbox from "../controls/checkbox/checkbox";
 import NumberInput from "../controls/number-input/number-input";
 import CustomButton from "../controls/button/button";

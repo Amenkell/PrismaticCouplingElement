@@ -1,5 +1,5 @@
 import React, {memo} from 'react';
-import { VictoryChart, VictoryLine, VictoryAxis, VictoryTheme, VictoryTooltip, VictoryVoronoiContainer } from 'victory';
+import { VictoryChart, VictoryLine, VictoryAxis, VictoryTheme, VictoryVoronoiContainer } from 'victory';
 import {VictoryDataPoint} from "./plot.interface";
 import './plot.css';
 
