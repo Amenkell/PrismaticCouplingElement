@@ -1,0 +1,12 @@
+.footer-actions__container {
+    background: white;
+    padding: 20px;
+    border-radius: 6px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    width: 100%;
+}
+
+.footer-actions__buttons {
+    display: flex;
+    gap: 16px;
+}

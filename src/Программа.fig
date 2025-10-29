@@ -1,0 +1,705 @@
+function varargout = Optic1_2(varargin)
+% OPTIC1_2 Application M-file for Optic1_2.fig
+%    FIG = OPTIC1_2 launch Optic1_2 GUI.
+%    OPTIC1_2('callback_name', ...) invoke the named callback.
+
+% Last Modified by GUIDE v2.5 23-May-2004 09:40:47
+
+if nargin == 0  % LAUNCH GUI
+
+	fig = openfig(mfilename,'reuse');
+
+	% Generate a structure of handles to pass to callbacks, and store it. 
+	handles = guihandles(fig);
+	guidata(fig, handles);
+
+	if nargout > 0
+		varargout{1} = fig;
+	end
+
+elseif ischar(varargin{1}) % INVOKE NAMED SUBFUNCTION OR CALLBACK
+
+	try
+		if (nargout)
+			[varargout{1:nargout}] = feval(varargin{:}); % FEVAL switchyard
+		else
+			feval(varargin{:}); % FEVAL switchyard
+		end
+	catch
+		disp(lasterr);
+	end
+
+end
+
+
+
+
+% --------------------------------------------------------------------
+function varargout = edit1_Callback(h, eventdata, handles, varargin)
+
+
+
+
+% --------------------------------------------------------------------
+function varargout = edit2_Callback(h, eventdata, handles, varargin)
+
+
+
+
+% --------------------------------------------------------------------
+function varargout = edit3_Callback(h, eventdata, handles, varargin)
+
+
+
+
+% --------------------------------------------------------------------
+function varargout = edit4_Callback(h, eventdata, handles, varargin)
+
+
+
+
+% --------------------------------------------------------------------
+function varargout = edit5_Callback(h, eventdata, handles, varargin)
+
+
+
+
+% --------------------------------------------------------------------
+function varargout = edit6_Callback(h, eventdata, handles, varargin)
+
+
+
+
+% --------------------------------------------------------------------
+function varargout = edit7_Callback(h, eventdata, handles, varargin)
+
+
+
+
+% --------------------------------------------------------------------
+function varargout = edit8_Callback(h, eventdata, handles, varargin)
+
+
+
+
+% --------------------------------------------------------------------
+function varargout = edit9_Callback(h, eventdata, handles, varargin)
+
+
+
+
+% --------------------------------------------------------------------
+function varargout = edit10_Callback(h, eventdata, handles, varargin)
+
+
+
+
+% --------------------------------------------------------------------
+function varargout = pushbutton1_Callback(h, eventdata, handles, varargin)
+global Neff Ne gam alf N z zm Nm;
+TEM=get(handles.text11,'String');
+filename=strcat('Данные- .txt');
+[fname pname]=uiputfile(filename,'Сохранить файл как');
+fullname=strcat(pname,fname);
+fid=fopen(fullname,'w');
+fprintf(fid,'%s\n',get(handles.edit18,'String'));
+fprintf(fid,'%s\n',TEM);
+fprintf(fid,'Neff (0, 1, 2, ...): %s\n',num2str(Neff));
+fprintf(fid,'Ne: %6.4f\n',Ne);
+fprintf(fid,'alf - степень ступенчатости: %6.4f\n',alf);
+fprintf(fid,'B/A - доля примеси экспоненты в аппроксимации,\nзадающая протяженность размытости диффузного слоя: %6.4f\n',gam);
+fprintf(fid,'%s\n', ' ');
+fprintf(fid,'%s\n\n', 'Точки:');
+fprintf(fid, '%6.4f \t %6.4f \n', [zm; Nm-Ne]);
+fprintf(fid,'%s\n', ' ');
+fprintf(fid,'%s\n\n', 'Кривая delta ne(h):');
+fprintf(fid, '%6.4f \t %6.4f \n', [z; N-Ne]);
+fclose(fid);
+set(handles.text24,'String',fullname);
+
+% --------------------------------------------------------------------
+function varargout = pushbutton2_Callback(h, eventdata, handles, varargin)
+
+
+
+
+% --------------------------------------------------------------------
+function varargout = edit11_Callback(h, eventdata, handles, varargin)
+
+
+
+
+% --------------------------------------------------------------------
+function varargout = edit12_Callback(h, eventdata, handles, varargin)
+
+
+
+
+% --------------------------------------------------------------------
+function varargout = pushbutton3_Callback(h, eventdata, handles, varargin)
+global Nm N b bm z zm m mi Ne;
+if get(handles.checkbox1,'Value')
+    figure(2);
+    hold on;
+    plot(z,N-Ne,'b','LineWidth',2);
+    if get(handles.checkbox18,'Value')
+        plot(z,N-Ne,'b',zm,Nm-Ne,'r*');
+    end;
+      
+    grid on;
+    %xlim([0 8]);
+    ylabel('\Delta n_e','Fontsize',16,'Units','Data','Position',[-0.6 0.115 17.32],'Rotation',0,'HorizontalAlignment','Right','VerticalAlignment','bottom');
+    xlabel('depth, mkm','Fontsize',14,'Units','Data','Position',[7.45 -0.01 17.32],'Rotation',0,'HorizontalAlignment','Center','VerticalAlignment','cap');
+else
+    figure(3);
+    hold on;
+    plot(m-3/4,b,'b',mi-3/4,bm,'r*'),grid on; 
+    xlim([-3/4 fix(m(end)+1)]);
+    xlabel('m');
+    ylabel('b(m)');
+end;
+
+% --------------------------------------------------------------------
+function varargout = radiobutton1_Callback(h, eventdata, handles, varargin)
+if get(h,'Value')
+    set(handles.text6,'String','в градусах (формат: гггммсс) !');
+else
+    set(handles.text6,'String','в эффективных величинах');
+end;
+
+% --------------------------------------------------------------------
+function varargout = edit13_Callback(h, eventdata, handles, varargin)
+
+
+
+
+% --------------------------------------------------------------------
+function varargout = edit14_Callback(h, eventdata, handles, varargin)
+
+
+
+
+% --------------------------------------------------------------------
+function varargout = edit15_Callback(h, eventdata, handles, varargin)
+
+
+
+
+% --------------------------------------------------------------------
+function varargout = edit16_Callback(h, eventdata, handles, varargin)
+
+
+
+
+% --------------------------------------------------------------------
+function varargout = edit17_Callback(h, eventdata, handles, varargin)
+
+
+% --------------------------------------------------------------------
+function varargout = checkbox1_Callback(h, eventdata, handles, varargin)
+global Nm N b bm z zm m mi Ne;
+if get(h,'Value')
+    set(handles.text10,'String','n(z)');
+    plot(z,(N-Ne),'b',zm,(Nm-Ne),'r*'),grid;axis auto; %xlim([0 fix(z(end))]);%[0 8]
+else
+    set(handles.text10,'String','b(m)');
+    plot(m-3/4,b,'m',mi-3/4,bm,'ro'),grid; xlim([-3/4 fix(m(end)+1)]);
+end;
+
+% --------------------------------------------------------------------
+function varargout = checkbox2_Callback(h, eventdata, handles, varargin)
+if get(h,'Value')
+    set(handles.text11,'String','TM');
+else
+    set(handles.text11,'String','TE');
+end;
+
+
+
+
+% --------------------------------------------------------------------
+function varargout = checkbox3_Callback(h, eventdata, handles, varargin)
+global r;
+if get(h,'Value')
+    set(handles.edit1,'Enable','On');
+    set(handles.checkbox4,'Enable','On');
+    r=r+1;
+else
+    set(handles.edit1,'Enable','Off');
+    set(handles.checkbox4,'Enable','Off');
+    r=r-1;
+end;
+
+
+% --------------------------------------------------------------------
+function varargout = checkbox4_Callback(h, eventdata, handles, varargin)
+global r;
+if get(h,'Value')
+    set(handles.edit2,'Enable','On');
+    set(handles.checkbox5,'Enable','On');
+    r=r+1;
+else
+    set(handles.edit2,'Enable','Off');
+    set(handles.checkbox5,'Enable','Off');
+    r=r-1;
+end;
+
+% --------------------------------------------------------------------
+function varargout = checkbox5_Callback(h, eventdata, handles, varargin)
+global r;
+if get(h,'Value')
+    set(handles.edit3,'Enable','On');
+    set(handles.checkbox6,'Enable','On');
+    r=r+1;
+else
+    set(handles.edit3,'Enable','Off');
+    set(handles.checkbox6,'Enable','Off');
+    r=r-1;
+end;
+
+% --------------------------------------------------------------------
+function varargout = checkbox6_Callback(h, eventdata, handles, varargin)
+global r;
+if get(h,'Value')
+    set(handles.edit5,'Enable','On');
+    set(handles.checkbox7,'Enable','On');
+    r=r+1;
+else
+    set(handles.edit5,'Enable','Off');
+    set(handles.checkbox7,'Enable','Off');
+    r=r-1;
+end;
+
+
+
+
+% --------------------------------------------------------------------
+function varargout = checkbox7_Callback(h, eventdata, handles, varargin)
+global r;
+if get(h,'Value')
+    set(handles.edit4,'Enable','On');
+    set(handles.checkbox8,'Enable','On');
+    r=r+1;
+else
+    set(handles.edit4,'Enable','Off');
+    set(handles.checkbox8,'Enable','Off');
+    r=r-1;
+end;
+
+
+
+
+% --------------------------------------------------------------------
+function varargout = checkbox8_Callback(h, eventdata, handles, varargin)
+global r;
+if get(h,'Value')
+    set(handles.edit6,'Enable','On');
+    set(handles.checkbox9,'Enable','On');
+    r=r+1;
+else
+    set(handles.edit6,'Enable','Off');
+    set(handles.checkbox9,'Enable','Off');
+    r=r-1;
+end;
+
+
+
+
+% --------------------------------------------------------------------
+function varargout = checkbox9_Callback(h, eventdata, handles, varargin)
+global r;
+if get(h,'Value')
+    set(handles.edit7,'Enable','On');
+    set(handles.checkbox10,'Enable','On');
+    r=r+1;
+else
+    set(handles.edit7,'Enable','Off');
+    set(handles.checkbox10,'Enable','Off');
+    r=r-1;
+end;
+
+
+
+
+% --------------------------------------------------------------------
+function varargout = checkbox10_Callback(h, eventdata, handles, varargin)
+global r;
+if get(h,'Value')
+    set(handles.edit8,'Enable','On');
+    set(handles.checkbox13,'Enable','On');
+    r=r+1;
+else
+    set(handles.edit8,'Enable','Off');
+    set(handles.checkbox13,'Enable','Off');
+    r=r-1;
+end;
+
+
+
+
+% --------------------------------------------------------------------
+function varargout = checkbox11_Callback(h, eventdata, handles, varargin)
+global r;
+if get(h,'Value')
+    set(handles.edit14,'Enable','On');
+    set(handles.checkbox12,'Enable','On');
+    r=r+1;
+else
+    set(handles.edit14,'Enable','Off');
+    set(handles.checkbox12,'Enable','Off');
+    r=r-1;
+end;
+
+
+
+
+% --------------------------------------------------------------------
+function varargout = checkbox12_Callback(h, eventdata, handles, varargin)
+global r;
+if get(h,'Value')
+    set(handles.edit13,'Enable','On');
+    r=r+1;
+else
+    set(handles.edit13,'Enable','Off');
+    r=r-1;
+end;
+
+% --------------------------------------------------------------------
+function varargout = checkbox13_Callback(h, eventdata, handles, varargin)
+global r;
+if get(h,'Value')
+    set(handles.edit9,'Enable','On');
+    set(handles.checkbox11,'Enable','On');
+    r=r+1;
+else
+    set(handles.edit9,'Enable','Off');
+    set(handles.checkbox11,'Enable','Off');
+    r=r-1;
+end;
+
+% --------------------------------------------------------------------
+function varargout = pushbutton4_Callback(h, eventdata, handles, varargin)
+global aG TEM z N Ne zm Nm  Neff m b mi bm alf gam
+set(handles.edit1,'String','');
+set(handles.edit2,'String','');
+set(handles.edit3,'String','');
+set(handles.edit5,'String','');
+set(handles.edit4,'String','');
+set(handles.edit6,'String','');
+set(handles.edit7,'String','');
+set(handles.edit8,'String','');
+set(handles.edit9,'String','');
+set(handles.edit14,'String','');
+set(handles.edit13,'String','');
+[fname pname]=uigetfile('*.txt','Открыть файл');
+fullname=strcat(pname,fname);
+fid=fopen(fullname,'r');
+set(handles.edit18,'String',fgetl(fid));
+TEM=fgetl(fid);
+if strcmp(TEM,'TM')
+    set(handles.text11,'String','TM');
+    set(handles.checkbox2,'Value',1);
+else
+    set(handles.text11,'String','TE');
+    set(handles.checkbox2,'Value',0);
+end;
+set(handles.text6,'String','в эффективных величинах');
+set(handles.radiobutton1,'Value',0);
+Nf=fscanf(fid,'%f',inf);
+fclose(fid);
+set(handles.text24,'String',fullname);
+alf1=Nf(end-1);
+gam1=Nf(end);
+Ne=Nf(end-2);
+set(handles.edit16,'String',num2str(Ne));
+Neff=Nf(1:end-3)';
+sM='';
+for s=0:length(Neff)-1
+    s1=strcat(num2str(s),'__',num2str(Neff(s+1)));
+    sM=strvcat(sM,s1);
+    if s==0
+        set(handles.edit1,'String',num2str(Neff(s+1)));
+    elseif s==1
+        set(handles.edit2,'String',num2str(Neff(s+1)));
+    elseif s==2
+        set(handles.edit3,'String',num2str(Neff(s+1)));
+    elseif s==3
+        set(handles.edit5,'String',num2str(Neff(s+1)));
+    elseif s==4
+        set(handles.edit4,'String',num2str(Neff(s+1)));
+    elseif s==5
+        set(handles.edit6,'String',num2str(Neff(s+1)));
+    elseif s==6
+        set(handles.edit7,'String',num2str(Neff(s+1)));
+    elseif s==7
+        set(handles.edit8,'String',num2str(Neff(s+1)));
+    elseif s==8
+        set(handles.edit9,'String',num2str(Neff(s+1)));
+    elseif s==9
+        set(handles.edit14,'String',num2str(Neff(s+1)));
+    elseif s==10
+        set(handles.edit13,'String',num2str(Neff(s+1)));
+    end;
+end;
+sM=strvcat(sM,strcat('Ne=',num2str(Ne)));
+set(handles.listbox1,'String',sM);
+aG=[alf1 gam1];
+profil;
+if get(handles.checkbox1,'Value')
+    plot(z,(N-Ne),'b',zm,(Nm-Ne),'r*'),grid; axis auto;%xlim([0 8]);
+    
+else
+    plot(m-3/4,b,'m',mi-3/4,bm,'ro'),grid; xlim([-3/4 fix(m(end)+1)]);
+end;
+set(handles.edit11,'String',num2str(alf));
+set(handles.edit12,'String',num2str(gam));
+set(handles.text25,'string',num2str(N(1)-Ne));
+
+
+% --------------------------------------------------------------------
+function varargout = pushbutton5_Callback(h, eventdata, handles, varargin)
+global r alf gam aG Neff Ne TEM Nm N b bm z zm m mi;
+k=[];
+if get(handles.radiobutton1,'Value')
+    if str2num(get(handles.edit16,'String'))<5
+        warndlg('Неправильное задание Neff!!!','Внимание!');
+        p=0;
+    else
+        if ~strcmp(get(handles.edit1,'Enable'),'off')
+            k=[k str2angle(get(handles.edit1,'String'))];
+        else
+            k=[k 0];
+        end;
+        if get(handles.checkbox4,'Value')==1
+            k=[k str2angle(get(handles.edit2,'String'))];
+        else
+            k=[k 0];
+        end;
+        if get(handles.checkbox5,'Value')==1
+            k=[k str2angle(get(handles.edit3,'String'))];
+        else
+            k=[k 0];
+        end;
+        if get(handles.checkbox6,'Value')==1
+            k=[k str2angle(get(handles.edit5,'String'))];
+        else
+            k=[k 0];
+        end;
+        if get(handles.checkbox7,'Value')==1
+            k=[k str2angle(get(handles.edit4,'String'))];
+        else
+            k=[k 0];
+        end;
+        if get(handles.checkbox8,'Value')==1
+            k=[k str2angle(get(handles.edit6,'String'))];
+        else
+            k=[k 0];
+        end;
+        if get(handles.checkbox9,'Value')==1
+            k=[k str2angle(get(handles.edit7,'String'))];
+        else
+            k=[k 0];
+        end;
+        if get(handles.checkbox10,'Value')==1
+            k=[k str2angle(get(handles.edit8,'String'))];
+        else
+            k=[k 0];
+        end;
+        if get(handles.checkbox13,'Value')==1
+            k=[k str2angle(get(handles.edit9,'String'))];
+        else
+            k=[k 0];
+        end;
+        if get(handles.checkbox11,'Value')==1
+            k=[k str2angle(get(handles.edit14,'String'))];
+        else
+            k=[k 0];
+        end;
+        if get(handles.checkbox12,'Value')==1
+            k=[k str2angle(get(handles.edit13,'String'))];
+        else
+            k=[k 0];
+        end;
+        p=1;
+        k=[k str2angle(get(handles.edit16,'String'))];
+        k=[k str2angle(get(handles.edit15,'String'))];
+        k=[k str2angle(get(handles.edit10,'String'))];
+        k=[k str2num(get(handles.edit17,'String'))];
+    end;    
+else
+    if str2num(get(handles.edit16,'String'))>5
+        warndlg('Неправильное задание Neff!!!','Внимание!');
+        p=0;
+    else
+            if ~strcmp(get(handles.edit1,'Enable'),'off')
+            k=[k str2num(get(handles.edit1,'String'))];
+        else
+            k=[k 0];
+        end;
+        if get(handles.checkbox4,'Value')==1
+            k=[k str2num(get(handles.edit2,'String'))];
+        else
+            k=[k 0];
+        end;
+        if get(handles.checkbox5,'Value')==1
+            k=[k str2num(get(handles.edit3,'String'))];
+        else
+            k=[k 0];
+        end;
+        if get(handles.checkbox6,'Value')==1
+            k=[k str2num(get(handles.edit5,'String'))];
+        else
+            k=[k 0];
+        end;
+        if get(handles.checkbox7,'Value')==1
+            k=[k str2num(get(handles.edit4,'String'))];
+        else
+            k=[k 0];
+        end;
+        if get(handles.checkbox8,'Value')==1
+            k=[k str2num(get(handles.edit6,'String'))];
+        else
+            k=[k 0];
+        end;
+        if get(handles.checkbox9,'Value')==1
+            k=[k str2num(get(handles.edit7,'String'))];
+        else
+            k=[k 0];
+        end;
+        if get(handles.checkbox10,'Value')==1
+            k=[k str2num(get(handles.edit8,'String'))];
+        else
+            k=[k 0];
+        end;
+        if get(handles.checkbox13,'Value')==1
+            k=[k str2num(get(handles.edit9,'String'))];
+        else
+            k=[k 0];
+        end;
+        if get(handles.checkbox11,'Value')==1
+            k=[k str2num(get(handles.edit14,'String'))];
+        else
+            k=[k 0];
+        end;
+        if get(handles.checkbox12,'Value')==1
+            k=[k,str2num(get(handles.edit13,'String'))];
+        else
+            k=[k 0];
+        end;
+        p=1;
+        k=[k str2num(get(handles.edit16,'String'))];
+    end;
+end;
+if p
+    s=find(k==0);
+    if length(k)==12
+        Neff=k(1:s(1)-1);
+        Ne=k(12);
+        sM='';
+        for s1=0:length(Neff)-1
+            sM=strvcat(sM,strcat(num2str(s1),'__'));
+        end;
+        strM=num2str([Neff'; Ne]);
+        sM=strvcat(sM,'Ne=');
+        set(handles.listbox1,'String',strcat(sM,strM));
+    elseif length(k)==15
+        eps=k(13)-k(14);
+        ce=cos(gr2rad(eps));
+        se=sin(gr2rad(eps));
+        sa=sin(gr2rad(k(14)-k(1:s(1)-1)));
+        Neff=sa*ce+sqrt(k(15)^2-sa.^2)*se;
+        Ne=sin(gr2rad(k(14)-k(12)))*ce+sqrt(k(15)^2-(sin(gr2rad(k(14)-k(12))))^2)*se;
+        sM='';
+        for s1=0:length(Neff)-1
+            sM=strvcat(sM,strcat(num2str(s1),'__'));
+        end;
+        strM=num2str([Neff'; Ne]);
+        sM=strvcat(sM,'Ne=');
+        set(handles.listbox1,'String',strcat(sM,strM));
+    end;
+    alf1=str2num(get(handles.edit11,'String'));
+    gam1=str2num(get(handles.edit12,'String'));
+    aG=[alf1 gam1];
+    TEM=get(handles.text11,'String');
+    if (length(Neff)==3)
+        if (aG(1)==-100)&(aG(2)==0)
+            warndlg('Недостаточно входных параметров!','Внимание!');
+        else
+            profil;
+            if get(handles.checkbox1,'Value')
+                plot(z,(N-Ne),'b',zm,(Nm-Ne),'r*'),grid;
+%                 xlim([0 8]);
+                axis auto;zoom on;
+            else
+                plot(m-3/4,b,'m',mi-3/4,bm,'ro'),grid; xlim([-3/4 fix(m(end)+1)]);zoom on;
+            end;
+            set(handles.edit11,'String',num2str(alf));
+            set(handles.edit12,'String',num2str(gam));
+            set(handles.text25,'string',num2str(N(1)-Ne));
+        end;
+    elseif (length(Neff)==2)
+        if (aG(1)==-100)|(aG(2)==0)
+            warndlg('Недостаточно входных параметров!','Внимание!');
+        else
+            profil;
+            if get(handles.checkbox1,'Value')
+                plot(z,(N-Ne),'b',zm,(Nm-Ne),'r*'),grid;
+%                 xlim([0 8]);
+                axis auto;
+                zoom on;
+            else
+                plot(m-3/4,b,'m',mi-3/4,bm,'ro'),grid; xlim([-3/4 fix(m(end)+1)]);zoom on;grid
+            end;
+            set(handles.edit11,'String',num2str(alf));
+            set(handles.edit12,'String',num2str(gam));
+            set(handles.text25,'string',num2str(N(1)-Ne));
+        end;
+    elseif (length(Neff)<=1)
+        warndlg('Недостаточно входных параметров!','Внимание!');
+    else
+        profil;
+        if get(handles.checkbox1,'Value')
+            plot(z,(N-Ne),'b',zm,(Nm-Ne),'r*'),grid;zoom on; axis auto;%xlim([0 8]);zoom on;            
+        else
+            plot(m-3/4,b,'m',mi-3/4,bm,'ro'),grid; xlim([-3/4 fix(m(end)+1)]);zoom on;
+        end;
+        set(handles.edit11,'String',num2str(alf));
+        set(handles.edit12,'String',num2str(gam));
+        set(handles.text25,'string',num2str(N(1)-Ne));
+%         set(handles.edit18,'String',date);
+    end;
+end;
+
+function pushbutton7_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton7 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+helpdlg(strvcat('Для гауссоподобных волноводов  характерны значения ','alf=0.9-1.1 и В/А=0.8-1.5 ','Для профиля типа ступеньки alf=0.5-0.6, В/А=0-0.1. ','alf - степень ступенчатости, В/А - доля примеси экспоненты в аппроксимации, задающая протяженность  размытости диффузного слоя.','Одинакового размытие можно достигнуть  изменяя alf и B/A в паре, чуть увеличивая alf  и уменьшая gam. ','Например: ','alf=-100, В/А=0 - стандартные значения для 4-х модовых волноводов и выше, т.е. используется левый корень alf и полностью рассчитываются параметры профиля alf, n0, A, B. ','alf=1.1 и A/B=0 - задание для трехмодового волновода и выше, alf,n0, A, B -рассчитываются. ','alf=-100 и A/B=0.1 -для трехмодового волновода и выше, B/A=0.1, остальные величины из alf,n0, A,B -рассчитываются. ','alf=0.57 и A/B=0.001 -для двухмодового волновода и выше, alf =0.57, B/A=0.001, остальные величины n0, A, B -рассчитываются.'),'О дополнительных данных');
+
+
+% --- Executes on button press in checkbox18.
+function checkbox18_Callback(hObject, eventdata, handles)
+% hObject    handle to checkbox18 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of checkbox18
+
+
+% --- Executes on button press in pushbutton8.
+function pushbutton8_Callback(hObject, eventdata, handles)
+global z zm N Nm Ne
+figure;
+plot(z,-log(N-Ne),'b',zm,-log(Nm-Ne),'r*'),grid;zoom on; axis auto;
+mean(diff(log(N-Ne))./diff(z));
+
+message=strvcat('все точки зависимости: D^2',num2str(-mean(diff(log(N-Ne))./diff(z))),'точки - моды: D^2',num2str(-mean(diff(log(Nm-Ne))./diff(zm))));
+msgbox(message,'LOG(n), D^2');
+       
+
+
+% hObject    handle to pushbutton8 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+

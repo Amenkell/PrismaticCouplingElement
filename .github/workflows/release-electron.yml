@@ -35,6 +35,7 @@ jobs:
       - name: Upload release assets
         uses: softprops/action-gh-release@v2
         with:
+          generate_release_notes: true
           draft: false
           prerelease: false
           files: |
