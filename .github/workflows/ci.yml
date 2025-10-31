@@ -30,15 +30,21 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Validate commit messages
+      - name: Validate commit messages (PR)
         if: github.event_name == 'pull_request'
         run: |
-          npx commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose || true
+          npx commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
       
-      - name: Validate latest commit message
+      - name: Validate latest commit message (Push)
         if: github.event_name == 'push'
         run: |
-          npx commitlint --from HEAD~1 --to HEAD --verbose || true
+          # Проверяем, есть ли предыдущий коммит
+          if git rev-parse HEAD~1 >/dev/null 2>&1; then
+            npx commitlint --from HEAD~1 --to HEAD --verbose
+          else
+            echo "Это первый коммит в репозитории, проверяем его отдельно"
+            npx commitlint --from HEAD --to HEAD --verbose
+          fi
 
       - name: Run tests (CI mode)
         run: npm test -- --ci --watchAll=false
