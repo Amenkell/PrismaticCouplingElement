@@ -1,12 +1,22 @@
-import React, {memo, useEffect, useMemo, useRef} from 'react';
+import React, {memo, useEffect, useMemo, useRef, useCallback} from 'react';
 import ReactECharts from 'echarts-for-react';
-import {PlotGraphProps} from "./plot.interface";
+import type { ECharts } from 'echarts';
+import {DEFAULT_I18N, PlotGraphProps} from "./plot.interface";
 import './plot.css';
 
-type EChartsRef = { getEchartsInstance?: () => any };
+function formatTooltip(params: any, zUnit: string, deltaLabel: string): string {
+    if (Array.isArray(params) && params.length > 0) {
+        const param = params[0];
+        if (param.value && Array.isArray(param.value) && param.value.length >= 2) {
+            return `z: ${Number(param.value[0]).toFixed(3)} ${zUnit}<br/>${deltaLabel}: ${Number(param.value[1]).toFixed(6)}`;
+        }
+    }
+    return '';
+}
 
-const PlotGraph: React.FC<PlotGraphProps> = ({ results, showModesPoints, onGetChartDataUrlRef }) => {
-    const chartRef = useRef<EChartsRef | null>(null);
+const PlotGraph: React.FC<PlotGraphProps> = ({ results, showModesPoints, onGetChartDataUrlRef, width = '100%', height = '60vh', i18n }) => {
+    const strings = useMemo(() => ({ ...DEFAULT_I18N, ...(i18n || {}) }), [i18n]);
+    const echartsInstanceRef = useRef<ECharts | null>(null);
 
     // Формируем данные для графика из результатов расчёта
     const { hasData, chartOption } = useMemo(() => {
@@ -60,7 +70,7 @@ const PlotGraph: React.FC<PlotGraphProps> = ({ results, showModesPoints, onGetCh
             itemStyle?: { color: string };
         }> = [
             {
-                name: 'Профиль',
+                name: strings.seriesProfile,
                 type: 'line',
                 data: profileData,
                 smooth: true,
@@ -77,7 +87,7 @@ const PlotGraph: React.FC<PlotGraphProps> = ({ results, showModesPoints, onGetCh
 
         if (showModesPoints && modesData.length > 0) {
             series.push({
-                name: 'Моды',
+                name: strings.seriesModes,
                 type: 'scatter',
                 data: modesData,
                 symbolSize: 10,
@@ -93,15 +103,7 @@ const PlotGraph: React.FC<PlotGraphProps> = ({ results, showModesPoints, onGetCh
                 axisPointer: {
                     type: 'cross' as const
                 },
-                formatter: (params: any) => {
-                    if (Array.isArray(params) && params.length > 0) {
-                        const param = params[0];
-                        if (param.value && Array.isArray(param.value) && param.value.length >= 2) {
-                            return `z: ${param.value[0].toFixed(3)} мкм<br/>Δne: ${param.value[1].toFixed(6)}`;
-                        }
-                    }
-                    return '';
-                }
+                formatter: (params: any) => formatTooltip(params, strings.tooltipZUnit, strings.tooltipDeltaNe)
             },
             grid: {
                 left: '80px',
@@ -112,7 +114,7 @@ const PlotGraph: React.FC<PlotGraphProps> = ({ results, showModesPoints, onGetCh
             },
             xAxis: {
                 type: 'value' as const,
-                name: 'Глубина z, мкм',
+                name: strings.xAxis,
                 nameLocation: 'middle' as const,
                 nameGap: 35,
                 nameTextStyle: {
@@ -121,7 +123,7 @@ const PlotGraph: React.FC<PlotGraphProps> = ({ results, showModesPoints, onGetCh
             },
             yAxis: {
                 type: 'value' as const,
-                name: 'Δne',
+                name: strings.yAxis,
                 nameLocation: 'middle' as const,
                 nameGap: 55,
                 nameTextStyle: {
@@ -135,36 +137,37 @@ const PlotGraph: React.FC<PlotGraphProps> = ({ results, showModesPoints, onGetCh
             hasData: true,
             chartOption: option
         };
-    }, [results, showModesPoints]);
+    }, [results, showModesPoints, strings]);
 
     useEffect(() => {
         if (!onGetChartDataUrlRef) return;
         const getter = () => {
-            const inst = chartRef.current?.getEchartsInstance?.();
+            const inst = echartsInstanceRef.current;
             if (!inst) return null;
             try {
                 return inst.getDataURL({ type: 'png', pixelRatio: 2, backgroundColor: '#ffffff' });
-            } catch (e) {
+            } catch {
                 return null;
             }
         };
         onGetChartDataUrlRef(getter);
         return () => {
-            try {
-                // очистка ссылки на функцию экспорта
-                onGetChartDataUrlRef(null as any);
-            } catch {}
+            try { onGetChartDataUrlRef(null as any); } catch {}
         };
-    }, [onGetChartDataUrlRef, chartOption]);
+    }, [onGetChartDataUrlRef]);
+
+    const handleChartReady = useCallback((inst: ECharts) => {
+        echartsInstanceRef.current = inst;
+    }, []);
 
     // Отображаем заглушку если нет данных
     if (!hasData) {
         return (
             <div>
-                <h2>График профиля показателя преломления</h2>
+                <h2>{strings.noDataTitle}</h2>
                 <div style={{ 
-                    width: '800px', 
-                    height: '400px', 
+                    width: typeof width === 'number' ? `${width}px` : width,
+                    height: typeof height === 'number' ? `${height}px` : height,
                     display: 'flex', 
                     alignItems: 'center', 
                     justifyContent: 'center',
@@ -172,9 +175,7 @@ const PlotGraph: React.FC<PlotGraphProps> = ({ results, showModesPoints, onGetCh
                     borderRadius: '4px',
                     backgroundColor: '#f9f9f9'
                 }}>
-                    <p style={{ color: '#666', fontSize: '16px' }}>
-                        Нажмите "Старт" для выполнения расчёта и построения графика
-                    </p>
+                    <p style={{ color: '#666', fontSize: '16px' }}>{strings.noDataHint}</p>
                 </div>
             </div>
         );
@@ -182,20 +183,23 @@ const PlotGraph: React.FC<PlotGraphProps> = ({ results, showModesPoints, onGetCh
 
     return (
         <div>
-            <h2>График профиля Δn<sub>e</sub>(z)</h2>
+            <h2>{strings.title}</h2>
             {results && results.prismResults && (
                 <div style={{ marginBottom: '10px', fontSize: '14px' }}>
-                    <strong>Результаты расчёта:</strong>
-                    <div>α = {results.prismResults.calculatedAlpha.toFixed(4)}</div>
-                    <div>B/A = {results.prismResults.calculatedGamma.toFixed(4)}</div>
-                    <div>n₀ (поверхность) = {results.prismResults.n0.toFixed(4)}</div>
-                    <div>Δn₀ = {(results.prismResults.N[0] - results.NeNeff).toFixed(6)}</div>
+                    <strong>{strings.summaryHeader}</strong>
+                    <div>{strings.summaryAlpha} = {results.prismResults.calculatedAlpha.toFixed(4)}</div>
+                    <div>{strings.summaryGamma} = {results.prismResults.calculatedGamma.toFixed(4)}</div>
+                    <div>{strings.summaryN0} = {results.prismResults.n0.toFixed(4)}</div>
+                    <div>{strings.summaryDeltaN0} = {(results.prismResults.N[0] - results.NeNeff).toFixed(6)}</div>
                 </div>
             )}
             <ReactECharts
-                ref={chartRef as any}
+                onChartReady={handleChartReady}
                 option={chartOption}
-                style={{ width: '1200px', height: '600px' }}
+                style={{ 
+                    width: typeof width === 'number' ? `${width}px` : width,
+                    height: typeof height === 'number' ? `${height}px` : height
+                }}
                 opts={{ renderer: 'canvas' }}
                 notMerge={true}
             />
