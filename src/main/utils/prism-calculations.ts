@@ -43,8 +43,12 @@ function calculateProfile(
   const isArray = Array.isArray(b);
   const bArray = isArray ? b : [b];
   
-  // Корректируем альфа, если он равен 0.5
-  const correctedAlpha = alpha === 0.5 ? alpha + 0.0001 : alpha;
+  // Корректируем alpha для устойчивости около 0.5 и ограничиваем диапазон
+  const epsilonAlpha = 1e-4;
+  let correctedAlpha = alpha;
+  if (Math.abs(alpha - 0.5) < epsilonAlpha) correctedAlpha = 0.5 + epsilonAlpha;
+  if (correctedAlpha < 0.2) correctedAlpha = 0.2;
+  if (correctedAlpha > 20) correctedAlpha = 20;
   
   const s1 = AB[0] * correctedAlpha * gammaFunction(correctedAlpha) / 
              (gammaFunction(correctedAlpha + 0.5) * Math.sqrt(Math.PI));
@@ -54,10 +58,13 @@ function calculateProfile(
       return NaN;
     }
     
-    const term1 = s1 * Math.pow(1 - bi, correctedAlpha - 0.5);
-    const term2 = AB[1] * Math.log(bi) / 4;
+    const safeBi = Math.max(bi, 1e-12);
+    const denomE = e[0] - e[1];
+    if (denomE <= 0) return NaN;
+    const term1 = s1 * Math.pow(1 - safeBi, correctedAlpha - 0.5);
+    const term2 = AB[1] * Math.log(safeBi) / 4;
     const numerator = term1 - term2;
-    const value = numerator / Math.sqrt(e[0] - e[1]);
+    const value = numerator / Math.sqrt(denomE);
     
     // Фильтруем отрицательные значения z - физически глубина не может быть отрицательной
     if (value < 0) {
@@ -92,25 +99,48 @@ function fzero(
   maxIterations: number = 100
 ): number {
   let x = x0;
+  let xPrev = x0 + 1e-2; // небольшое смещение для секущей
+  let fxPrev = func(xPrev);
   const h = 1e-8;
-  
+  const maxStep = 1.0; // ограничение шага
+
   for (let iter = 0; iter < maxIterations; iter++) {
     const fx = func(x);
+    if (!isFinite(fx)) {
+      // если функция разошлась, возвращаемся к предыдущему
+      return xPrev;
+    }
     if (Math.abs(fx) < tolerance) {
       return x;
     }
-    
+
     // Численная производная
     const fxh = func(x + h);
-    const derivative = (fxh - fx) / h;
-    
-    if (Math.abs(derivative) < 1e-12) {
-      break;
+    let derivative = (fxh - fx) / h;
+
+    let step: number;
+    if (!isFinite(derivative) || Math.abs(derivative) < 1e-12) {
+      // fallback на метод секущих
+      const denom = fx - fxPrev;
+      if (Math.abs(denom) < 1e-16) {
+        // минимальный безопасный шаг
+        step = Math.sign(fx || 1) * 1e-3;
+      } else {
+        step = (x - xPrev) * fx / denom;
+      }
+    } else {
+      step = fx / derivative;
     }
-    
-    x = x - fx / derivative;
+
+    // демпфирование шага
+    step = Math.max(-maxStep, Math.min(maxStep, step));
+    const xNext = x - step;
+
+    xPrev = x;
+    fxPrev = fx;
+    x = xNext;
   }
-  
+
   return x;
 }
 
@@ -228,12 +258,14 @@ export function calculatePrismCoupling(params: PrismInputParams): PrismOutputRes
     
     // Функция для поиска альфа
     const findAlphaFunc = (testAlpha: number): number => {
-      const ba = b1.map(b1i => Math.pow(b1i, testAlpha));
-      const F = calculateF(b, b1);
+      // clamp alpha
+      const a = Math.max(0.2, Math.min(20, testAlpha));
+      const ba = b1.map(b1i => Math.pow(Math.max(b1i, 1e-12), a));
+      const F = calculateF(b.map(v => Math.max(v, 1e-12)), b1.map(v => Math.max(v, 1e-12)));
       
       let sum1 = 0, sum2 = 0, sum3 = 0, sum4 = 0;
       for (let i = 0; i < ba.length; i++) {
-        const lnB1 = Math.log(b1[i]);
+        const lnB1 = Math.log(Math.max(b1[i], 1e-12));
         sum1 += ba[i] * ba[i] * lnB1;
         sum2 += F[i] * ba[i] * lnB1;
         sum3 += mi[i] * ba[i] * lnB1;
@@ -251,11 +283,13 @@ export function calculatePrismCoupling(params: PrismInputParams): PrismOutputRes
     // Находим оптимальную альфа
     if (optimizationMode === 'both' || optimizationMode === 'alpha') {
       calculatedAlpha = fzero(findAlphaFunc, initialAlpha);
+      if (calculatedAlpha < 0.2) calculatedAlpha = 0.2;
+      if (calculatedAlpha > 20) calculatedAlpha = 20;
     }
     
     // Вычисляем AB для текущей альфа
-    const ba = b1.map(b1i => Math.pow(b1i, calculatedAlpha));
-    const F = calculateF(b, b1);
+    const ba = b1.map(b1i => Math.pow(Math.max(b1i, 1e-12), calculatedAlpha));
+    const F = calculateF(b.map(v => Math.max(v, 1e-12)), b1.map(v => Math.max(v, 1e-12)));
     
     if (gamma === 0) {
       // Решаем систему для нахождения A и B
@@ -278,8 +312,10 @@ export function calculatePrismCoupling(params: PrismInputParams): PrismOutputRes
     
     // Вычисляем ошибку
     const s1Array = b1.map((b1i, i) => {
-      const term1 = calculatedAlpha * AB[0] * Math.pow(b1i, calculatedAlpha - 1);
-      const term2 = Math.atan(Math.sqrt(b1i / b[i])) / Math.sqrt(b[i]) * AB[1] / 2;
+      const sb1 = Math.max(b1i, 1e-12);
+      const sb = Math.max(b[i], 1e-12);
+      const term1 = calculatedAlpha * AB[0] * Math.pow(sb1, calculatedAlpha - 1);
+      const term2 = Math.atan(Math.sqrt(sb1 / sb)) / Math.sqrt(sb) * AB[1] / 2;
       return 1 + Math.pow(term1 + term2, 2);
     });
     
@@ -328,7 +364,7 @@ export function calculatePrismCoupling(params: PrismInputParams): PrismOutputRes
     throw new Error('Ошибка: e[0] слишком близко к e[1]. Проверьте входные параметры.');
   }
   
-  const Em_final = modesNeff.map(n => n * n);
+  const Em_final = Em; // уже вычислено ранее
   const bm = Em_final.map(em => (em - e[1]) / de);
   const b2 = bm.map(bi => 1 - bi);
   
