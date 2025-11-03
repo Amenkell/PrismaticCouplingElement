@@ -42,9 +42,6 @@ jobs:
           prerelease: false
           files: |
             dist/*.exe
-            dist/*.blockmap
-            dist/*.yml
-            dist/*.yaml
           overwrite_files: true
           fail_on_unmatched_files: true
           token: ${{ secrets.RELEASE_TOKEN }}
