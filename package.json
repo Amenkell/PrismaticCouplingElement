@@ -73,8 +73,8 @@
     }
   },
   "build": {
-    "appId": "com.yourcompany.yourapp",
-    "productName": "Your App Name",
+    "appId": "com.prism.calculation",
+    "productName": "Расчёт призменного элемента",
     "directories": {
       "output": "dist"
     },
@@ -87,6 +87,10 @@
     "extraMetadata": {
       "main": "electron/main.js"
     },
+    "asar": true,
+    "asarUnpack": [
+      "node_modules/**/*.node"
+    ],
     "mac": {
       "category": "public.app-category.productivity"
     },
@@ -95,6 +99,12 @@
     },
     "linux": {
       "target": "AppImage"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
     }
   }
 }

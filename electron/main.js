@@ -4,6 +4,19 @@ const url = require('url');
 
 require('@electron/remote/main').initialize();
 
+// Исправление пути к ICU данным для упакованного приложения
+if (process.env.NODE_ENV === 'production' || app.isPackaged) {
+    // Устанавливаем путь к ресурсам Electron
+    // const appPath = app.getAppPath();
+    process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = 'true';
+    
+    // Для Windows, когда приложение упаковано
+    if (process.platform === 'win32') {
+        const basePath = path.dirname(app.getPath('exe'));
+        app.setPath('userData', path.join(basePath, 'userData'));
+    }
+}
+
 function createWindow() {
     const mainWindow = new BrowserWindow({
         width: 1300,
