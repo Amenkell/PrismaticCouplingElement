@@ -41,6 +41,7 @@ jobs:
           draft: false
           prerelease: false
           files: |
+            dist/**/*.exe
             dist/*.exe
           overwrite_files: true
           fail_on_unmatched_files: true
