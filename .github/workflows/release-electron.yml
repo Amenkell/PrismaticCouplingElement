@@ -63,8 +63,11 @@ jobs:
         env:
           # Отключаем создание дельта-обновлений для ускорения
           ELECTRON_BUILDER_COMPRESSION_LEVEL: 0
-          # Дополнительные переменные для ускорения
-          VITE_BUILD_TIME: true
+          # Отключаем подпись для совместимости с ICU
+          WIN_CSC_LINK: ""
+          WIN_CSC_KEY_PASSWORD: ""
+          CSC_LINK: ""
+          CSC_KEY_PASSWORD: ""
 
       - name: Upload release assets
         uses: softprops/action-gh-release@v2

@@ -3,6 +3,9 @@ const path = require('path');
 const url = require('url');
 const isDev = process.env.NODE_ENV === 'development';
 
+// Исправление ICU проблемы для упакованных приложений
+app.commandLine.appendSwitch('--disable-icu-data-url');
+
 require('@electron/remote/main').initialize();
 
 // Отключаем предупреждения безопасности в production
