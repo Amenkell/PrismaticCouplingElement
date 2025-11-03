@@ -86,7 +86,7 @@
       "node_modules/**/*",
       "package.json"
     ],
-    "asar": false,
+    "asar": true,
     "asarUnpack": [
       "node_modules/**/*.node"
     ],
@@ -94,8 +94,7 @@
       "category": "public.app-category.productivity"
     },
     "win": {
-      "target": "nsis",
-      "forceCodeSigning": false
+      "target": "nsis"
     },
     "linux": {
       "target": "AppImage"
