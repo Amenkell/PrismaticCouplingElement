@@ -1,9 +1,10 @@
-import React, {memo, useMemo} from 'react';
+import React, {memo, useEffect, useMemo, useRef} from 'react';
 import ReactECharts from 'echarts-for-react';
 import {PlotGraphProps} from "./plot.interface";
 import './plot.css';
 
-const PlotGraph: React.FC<PlotGraphProps> = ({ results, showModesPoints }) => {
+const PlotGraph: React.FC<PlotGraphProps> = ({ results, showModesPoints, onGetChartDataUrlRef }) => {
+    const chartRef = useRef<ReactECharts>(null);
 
     // Формируем данные для графика из результатов расчёта
     const { hasData, chartOption } = useMemo(() => {
@@ -134,6 +135,19 @@ const PlotGraph: React.FC<PlotGraphProps> = ({ results, showModesPoints }) => {
         };
     }, [results, showModesPoints]);
 
+    useEffect(() => {
+        if (!onGetChartDataUrlRef) return;
+        onGetChartDataUrlRef(() => {
+            const inst = chartRef.current?.getEchartsInstance?.();
+            if (!inst) return null;
+            try {
+                return inst.getDataURL({ type: 'png', pixelRatio: 2, backgroundColor: '#ffffff' });
+            } catch (e) {
+                return null;
+            }
+        });
+    }, [onGetChartDataUrlRef, chartOption]);
+
     // Отображаем заглушку если нет данных
     if (!hasData) {
         return (
@@ -170,6 +184,7 @@ const PlotGraph: React.FC<PlotGraphProps> = ({ results, showModesPoints }) => {
                 </div>
             )}
             <ReactECharts
+                ref={chartRef as any}
                 option={chartOption}
                 style={{ width: '1200px', height: '600px' }}
                 opts={{ renderer: 'canvas' }}

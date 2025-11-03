@@ -4,10 +4,10 @@ import './modal-alert.css';
 
 export interface ModalAlertProps {
     open: boolean;
-    title?: string;
+    title?: React.ReactNode;
     message: React.ReactNode;
     onClose: () => void;
-    confirmText?: string;
+    confirmText?: React.ReactNode;
 }
 
 const ModalAlert: React.FC<ModalAlertProps> = ({ open, title, message, onClose, confirmText = 'ОК' }) => {
