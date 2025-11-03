@@ -1,4 +1,4 @@
-import React, {useState, useCallback} from 'react';
+import React, {useState, useCallback, useRef} from 'react';
 import './App.css';
 import ModalAlert from './main/ui/modal-alert/modal-alert';
 import GraphSettings from "./main/settings-plot/settings-main";
@@ -10,7 +10,7 @@ import {IMode} from "./main/settings-modes/settings-modes.interface";
 import PlotGraph from "./main/plot/plot";
 import * as XLSX from 'xlsx';
 import ExcelJS from 'exceljs';
-import {calculatePrismCoupling, formatResultsAsText} from "./main/utils/prism-calculations";
+import {calculatePrismCoupling} from "./main/utils/prism-calculations";
 import {calculateNeffFromAngles, parseIfDMS} from "./main/utils/angle-to-neff";
 import {CalculationResults, PrismInputParams} from "./main/models/prism.interface";
 
@@ -38,11 +38,11 @@ const App = () => {
         setSettings(newSettings);
     };
 
-  // Получение изображения графика из PlotGraph
-  let getChartDataUrl: (() => string | null) | null = null;
-  const handleChartGetterRef = (getter: () => string | null) => {
-    getChartDataUrl = getter;
-  };
+  // Получение изображения графика из PlotGraph (через ref, чтобы не терять между рендерами)
+  const chartGetterRef = useRef<(() => string | null) | null>(null);
+  const handleChartGetterRef = useCallback((getter: any) => {
+    chartGetterRef.current = getter || null;
+  }, []);
 
     const performCalculation = useCallback(() => {
         if (!settings) {
@@ -98,7 +98,79 @@ const App = () => {
         }
     }, [settings, modes]);
 
-    const handleButtonClick = (action: ButtonAction) => {
+    const exportResults = useCallback(async () => {
+        if (!(calculationResults && calculationResults.prismResults && settings)) return;
+        const activeModes = modes.filter(m => m.active).map(m => m.value);
+        const inputParams: PrismInputParams = {
+            nPrism: settings.reflectedIndexPrism,
+            modesNeff: activeModes,
+            Ne: calculationResults.NeNeff,
+            alpha: settings.alfa,
+            gamma: settings.BA,
+            polarization: settings.poliarization
+        };
+
+        const results = calculationResults.prismResults;
+
+        const summaryData = [
+            ['Дата', new Date().toLocaleString()],
+            ['Поляризация', inputParams.polarization ? 'TM' : 'TE'],
+            ['Neff (активные моды)', inputParams.modesNeff.join(', ')],
+            ['Ne (подложка)', inputParams.Ne],
+            ['n0 (поверхность)', results.n0],
+            ['α (степень)', results.calculatedAlpha],
+            ['B/A', results.calculatedGamma],
+            ['Ошибка', results.error]
+        ];
+        const wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
+
+        const modesSheetData = [['z (мкм)', 'Δne']];
+        for (let i = 0; i < results.zm.length; i++) {
+            const zVal = results.zm[i].toFixed(6);
+            const dneVal = (results.Nm[i] - inputParams.Ne).toFixed(6);
+            modesSheetData.push([zVal, dneVal]);
+        }
+        const wsModes = XLSX.utils.aoa_to_sheet(modesSheetData);
+
+        const profileSheetData = [['z (мкм)', 'Δne']];
+        const maxRows = Math.min(results.z.length, 2000);
+        for (let i = 0; i < maxRows; i++) {
+            const zVal = results.z[i].toFixed(6);
+            const dneVal = (results.N[i] - inputParams.Ne).toFixed(6);
+            profileSheetData.push([zVal, dneVal]);
+        }
+        const wsProfile = XLSX.utils.aoa_to_sheet(profileSheetData);
+
+        const chartDataUrl = chartGetterRef.current ? chartGetterRef.current() : null;
+        const fileName = `prism-results-${new Date().toISOString().split('T')[0]}.xlsx`;
+
+        if (chartDataUrl) {
+            const wb = new ExcelJS.Workbook();
+            const ws1 = wb.addWorksheet('Summary');
+            const ws2 = wb.addWorksheet('Modes');
+            const ws3 = wb.addWorksheet('Profile');
+            ws1.addRows(summaryData);
+            ws2.addRows(modesSheetData);
+            ws3.addRows(profileSheetData);
+            const wsChart = wb.addWorksheet('Chart');
+            const imageId = wb.addImage({ base64: chartDataUrl, extension: 'png' });
+            wsChart.addImage(imageId, { tl: { col: 0, row: 0 }, ext: { width: 1200, height: 600 } });
+            const buffer = await wb.xlsx.writeBuffer();
+            const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = fileName; a.click();
+            URL.revokeObjectURL(url);
+        } else {
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, wsSummary, 'Summary');
+            XLSX.utils.book_append_sheet(wb, wsModes, 'Modes');
+            XLSX.utils.book_append_sheet(wb, wsProfile, 'Profile');
+            XLSX.writeFile(wb, fileName);
+        }
+    }, [calculationResults, settings, modes]);
+
+    const handleButtonClick = useCallback((action: ButtonAction) => {
         switch (action) {
             case ButtonActions.start:
                 performCalculation();
@@ -107,97 +179,10 @@ const App = () => {
                 setCalculationResults(null);
                 break;
             case ButtonActions.write:
-                if (calculationResults && calculationResults.prismResults && settings) {
-                    const activeModes = modes.filter(m => m.active).map(m => m.value);
-                    const inputParams: PrismInputParams = {
-                        nPrism: settings.reflectedIndexPrism,
-                        modesNeff: activeModes,
-                        Ne: calculationResults.NeNeff,
-                        alpha: settings.alfa,
-                        gamma: settings.BA,
-                        polarization: settings.poliarization
-                    };
-
-                    const results = calculationResults.prismResults;
-
-                    // Summary sheet
-                    const summaryData = [
-                        ['Дата', new Date().toLocaleString()],
-                        ['Поляризация', inputParams.polarization ? 'TM' : 'TE'],
-                        ['Neff (активные моды)', inputParams.modesNeff.join(', ')],
-                        ['Ne (подложка)', inputParams.Ne],
-                        ['n0 (поверхность)', results.n0],
-                        ['α (степень)', results.calculatedAlpha],
-                        ['B/A', results.calculatedGamma],
-                        ['Ошибка', results.error]
-                    ];
-                    const wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
-
-                    // Modes sheet (zm, Δne for modes)
-                    const modesSheetData = [['z (мкм)', 'Δne']];
-                    for (let i = 0; i < results.zm.length; i++) {
-                        const zVal = results.zm[i].toFixed(6);
-                        const dneVal = (results.Nm[i] - inputParams.Ne).toFixed(6);
-                        modesSheetData.push([zVal, dneVal]);
-                    }
-                    const wsModes = XLSX.utils.aoa_to_sheet(modesSheetData);
-
-                    // Profile sheet (z, Δne profile) – ограничим до первых 2000 точек для веса
-                    const profileSheetData = [['z (мкм)', 'Δne']];
-                    const maxRows = Math.min(results.z.length, 2000);
-                    for (let i = 0; i < maxRows; i++) {
-                        const zVal = results.z[i].toFixed(6);
-                        const dneVal = (results.N[i] - inputParams.Ne).toFixed(6);
-                        profileSheetData.push([zVal, dneVal]);
-                    }
-                    const wsProfile = XLSX.utils.aoa_to_sheet(profileSheetData);
-
-                    // Если доступно изображение графика – используем exceljs, чтобы встроить картинку
-                    const chartDataUrl = typeof getChartDataUrl === 'function' ? getChartDataUrl() : null;
-                    if (chartDataUrl) {
-                        const wb = new ExcelJS.Workbook();
-                        const ws1 = wb.addWorksheet('Summary');
-                        const ws2 = wb.addWorksheet('Modes');
-                        const ws3 = wb.addWorksheet('Profile');
-
-                        ws1.addRows(summaryData);
-                        ws2.addRows(modesSheetData);
-                        ws3.addRows(profileSheetData);
-
-                        // Добавляем картинку на отдельный лист Chart
-                        const wsChart = wb.addWorksheet('Chart');
-                        const imageId = wb.addImage({
-                            base64: chartDataUrl,
-                            extension: 'png'
-                        });
-                        wsChart.addImage(imageId, {
-                            tl: { col: 0, row: 0 },
-                            ext: { width: 1200, height: 600 }
-                        });
-
-                        const fileName = `prism-results-${new Date().toISOString().split('T')[0]}.xlsx`;
-                        wb.xlsx.writeBuffer().then((buffer) => {
-                            const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-                            const url = URL.createObjectURL(blob);
-                            const a = document.createElement('a');
-                            a.href = url;
-                            a.download = fileName;
-                            a.click();
-                            URL.revokeObjectURL(url);
-                        });
-                    } else {
-                        // Fallback: SheetJS без графика
-                        const wb = XLSX.utils.book_new();
-                        XLSX.utils.book_append_sheet(wb, wsSummary, 'Summary');
-                        XLSX.utils.book_append_sheet(wb, wsModes, 'Modes');
-                        XLSX.utils.book_append_sheet(wb, wsProfile, 'Profile');
-                        const fileName = `prism-results-${new Date().toISOString().split('T')[0]}.xlsx`;
-                        XLSX.writeFile(wb, fileName);
-                    }
-                }
+                exportResults();
                 break;
             case ButtonActions.download:
-                handleButtonClick(ButtonActions.write);
+                exportResults();
                 break;
             case ButtonActions.help:
                 showAlert(
@@ -228,7 +213,7 @@ const App = () => {
             default:
                 break;
         }
-    };
+    }, [performCalculation, exportResults, showAlert]);
 
   return (
       <div className={'app__body'}>

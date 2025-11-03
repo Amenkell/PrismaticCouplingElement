@@ -24,7 +24,7 @@ export function calculateNeffFromAngles(
   const epsVol = prismAngle - volumeAngle;
   const sinVol = Math.sin(degreesToRadians(epsVol));
 
-  const Ne = sinVol * ce + Math.sqrt(nPrism * nPrism - (sinVol * sinVol)) * se;
+  const NeNeff = sinVol * ce + Math.sqrt(nPrism * nPrism - (sinVol * sinVol)) * se;
 
   const Neff = modeAngles.map(angle => {
     const angleDiff = prismAngle - angle;
@@ -40,7 +40,7 @@ export function calculateNeffFromAngles(
     return result;
   });
 
-  return [Neff, Ne];
+  return [Neff, NeNeff];
 }
 
 export const parseIfDMS = (value: number): number => {
