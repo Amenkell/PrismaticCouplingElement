@@ -47,6 +47,6 @@ jobs:
             dist/*.yaml
           overwrite_files: true
           fail_on_unmatched_files: true
-          token: ${{ github.token }}
+          token: ${{ secrets.RELEASE_TOKEN }}
 
 
