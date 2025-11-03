@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useCallback} from 'react';
 import './App.css';
 import GraphSettings from "./main/settings-plot/settings-main";
 import {GraphSettingsType} from "./main/settings-plot/graph.interface";
@@ -7,27 +7,124 @@ import {ButtonAction, ButtonActions} from "./main/footer/footer-actions.interfac
 import SettingsModes from "./main/settings-modes/settings-modes";
 import {IMode} from "./main/settings-modes/settings-modes.interface";
 import PlotGraph from "./main/plot/plot";
+import {calculatePrismCoupling, formatResultsAsText} from "./main/utils/prism-calculations";
+import {calculateNeffFromAngles, parseIfDMS} from "./main/utils/angle-to-neff";
+import {CalculationResults, PrismInputParams} from "./main/models/prism.interface";
 
 const App = () => {
 
     const [comment, setComment] = useState('');
-    const [modes, onChangeModes] = useState<IMode[]>([{value: 0, active: false}]);
+    const [modes, onChangeModes] = useState<IMode[]>([
+        {value: 1043420, active: true},
+        {value: 1111046, active: true},
+        {value: 1152642, active: true}
+    ]);
+    const [settings, setSettings] = useState<GraphSettingsType | null>(null);
+    const [calculationResults, setCalculationResults] = useState<CalculationResults | null>(null);
 
-  const handleSettingsChange = (newSettings: GraphSettingsType) => {
-    console.log('Новые настройки:', newSettings);
-  };
+    const handleSettingsChange = (newSettings: GraphSettingsType) => {
+        setSettings(newSettings);
+    };
+
+    const performCalculation = useCallback(() => {
+        if (!settings) {
+            alert('Настройки не заданы');
+            return;
+        }
+
+        // Собираем активные моды
+        let activeModes = modes.filter(m => m.active).map(m => m.value);
+        
+        if (activeModes.length < 2) {
+            alert('Необходимо минимум 2 активные моды для расчёта');
+            return;
+        }
+
+        const nPrism = settings.reflectedIndexPrism;
+        const prismAngle = parseIfDMS(settings.prism);
+        const NeAngle = parseIfDMS(settings.substrate);
+        const volumeAngle = parseIfDMS(settings.volume);
+        const modeAngles = activeModes.map(m => parseIfDMS(m));
+
+        // Конвертируем углы мод в Neff и NeNeff
+        const [modesNeff, NeNeff] = calculateNeffFromAngles(
+            modeAngles,
+            NeAngle,
+            prismAngle,
+            volumeAngle,
+            nPrism
+        );
+
+        // Используем распарсенные значения для расчёта
+        const inputParams: PrismInputParams = {
+            nPrism: settings.reflectedIndexPrism,
+            modesNeff: modesNeff,
+            Ne: NeNeff,
+            alpha: settings.alfa,
+            gamma: settings.BA,
+            polarization: settings.poliarization
+        };
+
+        try {
+            const results = calculatePrismCoupling(inputParams);
+
+            setCalculationResults({
+                NeNeff: NeNeff,
+                prismResults: results,
+                isCalculated: true,
+                timestamp: new Date()
+            });
+
+        } catch (error) {
+            alert('Ошибка при расчёте: ' + (error as Error).message);
+        }
+    }, [settings, modes]);
 
     const handleButtonClick = (action: ButtonAction) => {
         switch (action) {
             case ButtonActions.start:
+                performCalculation();
                 break;
             case ButtonActions.edit:
+                setCalculationResults(null);
                 break;
             case ButtonActions.write:
+                if (calculationResults && calculationResults.prismResults && settings) {
+                    const activeModes = modes.filter(m => m.active).map(m => m.value);
+                    const inputParams: PrismInputParams = {
+                        nPrism: settings.reflectedIndexPrism,
+                        modesNeff: activeModes,
+                        Ne: calculationResults.NeNeff,
+                        alpha: settings.alfa,
+                        gamma: settings.BA,
+                        polarization: settings.poliarization
+                    };
+                    const text = formatResultsAsText(inputParams, calculationResults.prismResults);
+                    const blob = new Blob([text], { type: 'text/plain' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `prism-results-${new Date().toISOString().split('T')[0]}.txt`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                }
                 break;
             case ButtonActions.download:
+                handleButtonClick(ButtonActions.write);
                 break;
             case ButtonActions.help:
+                alert(
+                    'Программа расчёта призменного элемента связи\n\n' +
+                    'Порядок работы:\n' +
+                    '1. Настройте параметры (ПП призмы, подложка, объём)\n' +
+                    '2. Задайте моды (значения Neff)\n' +
+                    '3. Задайте α и B/A:\n' +
+                    '   - α=-100, B/A=0: автооптимизация обоих\n' +
+                    '   - α=значение, B/A=0: оптимизация B/A\n' +
+                    '   - α=значение, B/A=значение: фиксированные\n' +
+                    '4. Нажмите "Старт" для расчёта\n' +
+                    '5. Используйте "Записать" для экспорта результатов'
+                );
                 break;
             default:
                 break;
@@ -37,13 +134,13 @@ const App = () => {
   return (
       <div className={'app__body'}>
           <div>
-              <h1>График</h1>
+              <h1>Расчёт призменного элемента связи</h1>
               <GraphSettings
                   onSettingsChange={handleSettingsChange}
               />
           </div>
           <div>
-              <PlotGraph/>
+              <PlotGraph results={calculationResults} showModesPoints={settings?.modesPoints ?? false}/>
           </div>
           <div className={'app__action-container'}>
               <SettingsModes modes={modes} modesChange={onChangeModes}/>

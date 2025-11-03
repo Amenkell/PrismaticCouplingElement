@@ -1,5 +1,5 @@
 import {useState} from "react";
-import {UseFormReturn} from "../settings-plot/graph.interface";
+import {UseFormReturn} from "../models/form-return.interface";
 
 const useForm = <T extends object>(initialValues: T): UseFormReturn<T> => {
     const [values, setValues] = useState<T>(initialValues);

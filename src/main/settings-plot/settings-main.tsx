@@ -10,22 +10,20 @@ import {buttonVariants} from "../controls/button/button.interface";
 const GraphSettings: React.FC<GraphSettingsProps> = ({onSettingsChange}) => {
 
     const { values, handleChange, resetForm } = useForm<GraphSettingsType>({
-        prism: 1393343,
-        alfa: -100,
-        BA: 0,
-        substrate: 1960512,
+        prism: 1172400,
+        alfa: 0.51,
+        BA: 0.01,
+        substrate: 1772544,
         reflectedIndexPrism: 2.5445,
-        volume: 1312130,
+        volume: 1174204,
         poliarization: false,
         modesPoints: false,
     });
 
-    // Notify parent whenever values change
     useEffect(() => {
         onSettingsChange?.(values);
     }, [values, onSettingsChange]);
 
-    // Adapters for inputs to satisfy typed handleChange
     const handleNumberChange = (name: string, value: number | string) => {
         handleChange(name as keyof GraphSettingsType, value as any);
     };

@@ -1,4 +1,6 @@
-export interface VictoryDataPoint {
-    x: number | string;
-    y: number;
+import {CalculationResults} from "../models/prism.interface";
+
+export interface PlotGraphProps {
+    results: CalculationResults | null;
+    showModesPoints: boolean;
 }
