@@ -178,7 +178,7 @@ const App = () => {
             case ButtonActions.edit:
                 setCalculationResults(null);
                 break;
-            case ButtonActions.write:
+            case ButtonActions.upload:
                 exportResults();
                 break;
             case ButtonActions.download:

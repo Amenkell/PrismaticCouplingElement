@@ -7,7 +7,7 @@ export interface IFooterActionsProps {
 export const ButtonActions = {
     help: 'help',
     download: 'download',
-    write: 'write',
+    upload: 'upload',
     edit: 'edit',
     start: 'start',
 } as const;

@@ -28,12 +28,12 @@ const FooterActions: React.FC<IFooterActionsProps> = ({comment, onCommentChange,
                     Помощь
                 </CustomButton>
                 <CustomButton
-                    onClick={() => handleButtonAction(ButtonActions.download)} variant={buttonVariants.primary}>
+                    onClick={() => handleButtonAction(ButtonActions.upload)} variant={buttonVariants.primary}>
                     Загрузить
                 </CustomButton>
                 <CustomButton
-                    onClick={() => handleButtonAction(ButtonActions.write)} variant={buttonVariants.primary}>
-                    Записать
+                    onClick={() => handleButtonAction(ButtonActions.download)} variant={buttonVariants.primary}>
+                    Скачать
                 </CustomButton>
                 <CustomButton
                     onClick={() => handleButtonAction(ButtonActions.edit)} variant={buttonVariants.primary}>
