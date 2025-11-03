@@ -54,8 +54,8 @@ function calculateProfile(
              (gammaFunction(correctedAlpha + 0.5) * Math.sqrt(Math.PI));
   
   const result = bArray.map(bi => {
-    if (bi <= 0 || bi > 1) {
-      return NaN;
+    if (bi <= 0 || bi > 1 || !isFinite(bi)) {
+      return 1e10;
     }
     
     const safeBi = Math.max(bi, 1e-12);
@@ -65,11 +65,6 @@ function calculateProfile(
     const term2 = AB[1] * Math.log(safeBi) / 4;
     const numerator = term1 - term2;
     const value = numerator / Math.sqrt(denomE);
-    
-    // Фильтруем отрицательные значения z - физически глубина не может быть отрицательной
-    if (value < 0) {
-      return 0;
-    }
     
     return value;
   });
@@ -207,12 +202,6 @@ export function calculatePrismCoupling(params: PrismInputParams): PrismOutputRes
   let e0 = (Em[0] - Em[1]) * 0.25 + Em[0];
   e[0] = e0;
   
-  // Параметр xa (строка 17-18: xa=1; xa(strcmp(TEM,'TM'))=e(3)/e(1))
-  let xa = 1;
-  if (polarization) { // TM
-    xa = e[2] / e[0];
-  }
-  
   // Начальное значение альфа (если не задано)
   let initialAlpha = alpha;
   if (initialAlpha < 0.2) initialAlpha = 0.4;
@@ -233,6 +222,10 @@ export function calculatePrismCoupling(params: PrismInputParams): PrismOutputRes
   // Функция для оптимизации e0
   const optimizeE0 = (testE0: number): number => {
     e[0] = testE0;
+    const maxEm = Math.max(...Em);
+    if (testE0 <= maxEm + 1e-6) {
+      return 1e10;  // Large finite number instead of Infinity
+    }
     
     // Обновляем xa для TM поляризации (зависит от e[0])
     let currentXa = 1;
@@ -255,28 +248,53 @@ export function calculatePrismCoupling(params: PrismInputParams): PrismOutputRes
       const term = Math.atan(currentXa * (num / denom)) / Math.PI;
       return i - term + 0.75;
     });
-    
-    // Функция для поиска альфа
+
     const findAlphaFunc = (testAlpha: number): number => {
-      // clamp alpha
       const a = Math.max(0.2, Math.min(20, testAlpha));
       const ba = b1.map(b1i => Math.pow(Math.max(b1i, 1e-12), a));
+      const lb = b1.map(b1i => Math.log(Math.max(b1i, 1e-12)));
       const F = calculateF(b.map(v => Math.max(v, 1e-12)), b1.map(v => Math.max(v, 1e-12)));
-      
-      let sum1 = 0, sum2 = 0, sum3 = 0, sum4 = 0;
+
+      let sum_ba2_lb = 0, sum_F_ba_lb = 0, sum_mi_ba_lb = 0;
+      let sum_ba2 = 0, sum_F_ba = 0, sum_mi_ba = 0;
+      let sum_F2 = 0, sum_mi_F = 0;
       for (let i = 0; i < ba.length; i++) {
-        const lnB1 = Math.log(Math.max(b1[i], 1e-12));
-        sum1 += ba[i] * ba[i] * lnB1;
-        sum2 += F[i] * ba[i] * lnB1;
-        sum3 += mi[i] * ba[i] * lnB1;
-        sum4 += ba[i] * ba[i];
+        sum_ba2_lb += ba[i] * ba[i] * lb[i];
+        sum_F_ba_lb += F[i] * ba[i] * lb[i];
+        sum_mi_ba_lb += mi[i] * ba[i] * lb[i];
+        sum_ba2 += ba[i] * ba[i];
+        sum_F_ba += F[i] * ba[i];
+        sum_mi_ba += mi[i] * ba[i];
+        sum_F2 += F[i] * F[i];
+        sum_mi_F += mi[i] * F[i];
       }
-      
+
       if (gamma === 0) {
-        const det = sum1 * sum4 - sum2 * sum2;
+        // Full 3x3 det as in MATLAB
+        const Q = [
+          [sum_ba2_lb, sum_F_ba_lb, -sum_mi_ba_lb],
+          [sum_ba2, sum_F_ba, -sum_mi_ba],
+          [sum_F_ba, sum_F2, -sum_mi_F]
+        ];
+        // Compute det(Q)
+        const det = Q[0][0] * (Q[1][1] * Q[2][2] - Q[1][2] * Q[2][1]) -
+            Q[0][1] * (Q[1][0] * Q[2][2] - Q[1][2] * Q[2][0]) +
+            Q[0][2] * (Q[1][0] * Q[2][1] - Q[1][1] * Q[2][0]);
         return det;
       } else {
-        return sum1 - sum3;
+        // Correct 2x2 det with gamma terms
+        let sum_gam_ba_lb = 0, sum_gam_ba = 0;
+        for (let i = 0; i < ba.length; i++) {
+          const gam_term = ba[i] + gamma * F[i];
+          sum_gam_ba_lb += gam_term * ba[i] * lb[i];
+          sum_gam_ba += gam_term * ba[i];
+        }
+        const Q = [
+          [sum_gam_ba_lb, -sum_mi_ba_lb],
+          [sum_gam_ba, -sum_mi_ba]
+        ];
+        const det = Q[0][0] * Q[1][1] - Q[0][1] * Q[1][0];
+        return det;
       }
     };
     
@@ -328,20 +346,32 @@ export function calculatePrismCoupling(params: PrismInputParams): PrismOutputRes
   };
   
   // Минимизация по e0 методом Ньютона
-  if (optimizationMode === 'both') {
+  if (optimizationMode === 'none') {
     const h = 0.0002;
     let ex = e0;
     let dx = 1;
-    
-    while (Math.abs(dx) > h / 10) {
+
+    let iter = 0;
+    const maxIter = 50;
+    while (Math.abs(dx) > h / 10 && iter < maxIter) {
       const ee = ex - h;
       const ff = [
         optimizeE0(ee),
         optimizeE0(ee + h),
         optimizeE0(ee + 2 * h)
       ];
-      dx = (ff[2] - ff[0]) / (ff[2] - 2 * ff[1] + ff[0]) * h / 2;
+      const denom = ff[2] - 2 * ff[1] + ff[0];
+      if (Math.abs(denom) < 1e-12 || !isFinite(denom) || ff.some(v => !isFinite(v))) {
+        break;  // Stop if denom invalid or ff has NaN/Inf
+      }
+      dx = (ff[2] - ff[0]) / denom * h / 2;
       ex = ex - dx;
+      const minE0 = Math.max(...Em) + 1e-6;  // Small epsilon for stability
+      if (ex < minE0 || !isFinite(ex)) {
+        ex = minE0;  // Clamp or reset if NaN/too low
+        break;  // Optional: Exit early to prevent looping
+      }
+      iter++;
     }
     
     optimizeE0(ex);
@@ -366,7 +396,6 @@ export function calculatePrismCoupling(params: PrismInputParams): PrismOutputRes
   
   const Em_final = Em; // уже вычислено ранее
   const bm = Em_final.map(em => (em - e[1]) / de);
-  const b2 = bm.map(bi => 1 - bi);
   
   // Генерируем массив b для построения профиля (строка 81: b=1:-0.0001:0.0001)
   const bArray: number[] = [];
@@ -399,7 +428,7 @@ export function calculatePrismCoupling(params: PrismInputParams): PrismOutputRes
     const denom = Em_final[i] - e[2];
     if (num < 0 || denom <= 0) return i + 0.75;
     // В MATLAB: atan(xa*(e0-Em)./(Em-e2))/pi (БЕЗ sqrt!)
-    const term = Math.atan(finalXa * (num / denom)) / Math.PI;
+    const term = Math.atan(finalXa * Math.sqrt(num / denom)) / Math.PI;
     return i - term + 0.75;
   });
   

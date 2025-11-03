@@ -124,10 +124,10 @@ const App = () => {
         ];
         const wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
 
-        const modesSheetData = [['z (мкм)', 'Δne']];
+        const modesSheetData = [['z (мкм)', 'Neff Modes']];
         for (let i = 0; i < results.zm.length; i++) {
             const zVal = results.zm[i].toFixed(6);
-            const dneVal = (results.Nm[i] - inputParams.Ne).toFixed(6);
+            const dneVal = results.Nm[i].toFixed(6);
             modesSheetData.push([zVal, dneVal]);
         }
         const wsModes = XLSX.utils.aoa_to_sheet(modesSheetData);
