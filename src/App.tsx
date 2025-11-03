@@ -1,5 +1,6 @@
 import React, {useState, useCallback} from 'react';
 import './App.css';
+import ModalAlert from './main/ui/modal-alert/modal-alert';
 import GraphSettings from "./main/settings-plot/settings-main";
 import {GraphSettingsType} from "./main/settings-plot/graph.interface";
 import FooterActions from "./main/footer/footer-actions";
@@ -21,6 +22,15 @@ const App = () => {
     ]);
     const [settings, setSettings] = useState<GraphSettingsType | null>(null);
     const [calculationResults, setCalculationResults] = useState<CalculationResults | null>(null);
+    const [alertOpen, setAlertOpen] = useState(false);
+    const [alertTitle, setAlertTitle] = useState<string | undefined>(undefined);
+    const [alertMessage, setAlertMessage] = useState<React.ReactNode>('');
+
+    const showAlert = useCallback((message: React.ReactNode, title?: string) => {
+        setAlertTitle(title);
+        setAlertMessage(message);
+        setAlertOpen(true);
+    }, []);
 
     const handleSettingsChange = (newSettings: GraphSettingsType) => {
         setSettings(newSettings);
@@ -28,7 +38,7 @@ const App = () => {
 
     const performCalculation = useCallback(() => {
         if (!settings) {
-            alert('Настройки не заданы');
+            showAlert('Настройки не заданы', 'Ошибка');
             return;
         }
 
@@ -36,7 +46,7 @@ const App = () => {
         let activeModes = modes.filter(m => m.active).map(m => m.value);
         
         if (activeModes.length < 2) {
-            alert('Необходимо минимум 2 активные моды для расчёта');
+            showAlert('Необходимо минимум 2 активные моды для расчёта', 'Ошибка');
             return;
         }
 
@@ -76,7 +86,7 @@ const App = () => {
             });
 
         } catch (error) {
-            alert('Ошибка при расчёте: ' + (error as Error).message);
+            showAlert('Ошибка при расчёте: ' + (error as Error).message, 'Ошибка');
         }
     }, [settings, modes]);
 
@@ -113,17 +123,29 @@ const App = () => {
                 handleButtonClick(ButtonActions.write);
                 break;
             case ButtonActions.help:
-                alert(
-                    'Программа расчёта призменного элемента связи\n\n' +
-                    'Порядок работы:\n' +
-                    '1. Настройте параметры (ПП призмы, подложка, объём)\n' +
-                    '2. Задайте моды (значения Neff)\n' +
-                    '3. Задайте α и B/A:\n' +
-                    '   - α=-100, B/A=0: автооптимизация обоих\n' +
-                    '   - α=значение, B/A=0: оптимизация B/A\n' +
-                    '   - α=значение, B/A=значение: фиксированные\n' +
-                    '4. Нажмите "Старт" для расчёта\n' +
-                    '5. Используйте "Записать" для экспорта результатов'
+                showAlert(
+                    (
+                        <div>
+                            <div>Программа расчёта призменного элемента связи</div>
+                            <br/>
+                            <div><strong>Порядок работы:</strong></div>
+                            <ol>
+                                <li>Настройте параметры (ПП призмы, подложка, объём)</li>
+                                <li>Задайте моды (значения Neff)</li>
+                                <li>
+                                    Задайте α и B/A:
+                                    <ul>
+                                        <li>α = -100, B/A = 0: автооптимизация обоих</li>
+                                        <li>α = значение, B/A = 0: оптимизация B/A</li>
+                                        <li>α = значение, B/A = значение: фиксированные</li>
+                                    </ul>
+                                </li>
+                                <li>Нажмите «Старт» для расчёта</li>
+                                <li>Используйте «Записать» для экспорта результатов</li>
+                            </ol>
+                        </div>
+                    ),
+                    'Справка'
                 );
                 break;
             default:
@@ -146,6 +168,12 @@ const App = () => {
               <SettingsModes modes={modes} modesChange={onChangeModes}/>
               <FooterActions comment={comment} onCommentChange={setComment} onButtonClick={handleButtonClick}/>
           </div>
+          <ModalAlert
+              open={alertOpen}
+              title={alertTitle}
+              message={alertMessage}
+              onClose={() => setAlertOpen(false)}
+          />
       </div>
   );
 };
