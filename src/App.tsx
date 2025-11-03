@@ -96,7 +96,7 @@ const App = () => {
         } catch (error) {
             showAlert('Ошибка при расчёте: ' + (error as Error).message, 'Ошибка');
         }
-    }, [settings, modes]);
+    }, [settings, modes, showAlert]);
 
     const exportResults = useCallback(async () => {
         if (!(calculationResults && calculationResults.prismResults && settings)) return;
