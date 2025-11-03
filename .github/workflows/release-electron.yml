@@ -28,14 +28,43 @@ jobs:
           node-version: 20
           cache: npm
 
+      # Кэширование node_modules для ускорения установки зависимостей
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        id: cache-node-modules
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-modules-
+
+      # Кэширование build артефактов для Vite
+      - name: Cache build artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            .vite
+            build
+            node_modules/.vite
+          key: ${{ runner.os }}-vite-build-${{ hashFiles('**/package-lock.json') }}-${{ hashFiles('src/**') }}
+          restore-keys: |
+            ${{ runner.os }}-vite-build-${{ hashFiles('**/package-lock.json') }}-
+            ${{ runner.os }}-vite-build-
+
       - name: Install dependencies
-        run: npm ci
+        if: steps.cache-node-modules.outputs.cache-hit != 'true'
+        run: npm ci --prefer-offline --no-audit
 
       - name: Build web app
         run: npm run build
 
       - name: Build Electron distributables (no publish)
         run: npm run dist
+        env:
+          # Отключаем создание дельта-обновлений для ускорения
+          ELECTRON_BUILDER_COMPRESSION_LEVEL: 0
+          # Дополнительные переменные для ускорения
+          VITE_BUILD_TIME: true
 
       - name: Upload release assets
         uses: softprops/action-gh-release@v2
