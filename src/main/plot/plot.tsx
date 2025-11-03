@@ -3,8 +3,10 @@ import ReactECharts from 'echarts-for-react';
 import {PlotGraphProps} from "./plot.interface";
 import './plot.css';
 
+type EChartsRef = { getEchartsInstance?: () => any };
+
 const PlotGraph: React.FC<PlotGraphProps> = ({ results, showModesPoints, onGetChartDataUrlRef }) => {
-    const chartRef = useRef<ReactECharts>(null);
+    const chartRef = useRef<EChartsRef | null>(null);
 
     // Формируем данные для графика из результатов расчёта
     const { hasData, chartOption } = useMemo(() => {
@@ -137,7 +139,7 @@ const PlotGraph: React.FC<PlotGraphProps> = ({ results, showModesPoints, onGetCh
 
     useEffect(() => {
         if (!onGetChartDataUrlRef) return;
-        onGetChartDataUrlRef(() => {
+        const getter = () => {
             const inst = chartRef.current?.getEchartsInstance?.();
             if (!inst) return null;
             try {
@@ -145,7 +147,14 @@ const PlotGraph: React.FC<PlotGraphProps> = ({ results, showModesPoints, onGetCh
             } catch (e) {
                 return null;
             }
-        });
+        };
+        onGetChartDataUrlRef(getter);
+        return () => {
+            try {
+                // очистка ссылки на функцию экспорта
+                onGetChartDataUrlRef(null as any);
+            } catch {}
+        };
     }, [onGetChartDataUrlRef, chartOption]);
 
     // Отображаем заглушку если нет данных
