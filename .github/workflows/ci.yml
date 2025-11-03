@@ -52,7 +52,7 @@ jobs:
           fi
 
       - name: Run tests (CI mode)
-        run: npm test -- --ci --watchAll=false
+        run: npm run test -- --run
 
       - name: Build web app
         run: npm run build
