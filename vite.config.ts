@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
+  base: './', // Используем relative пути для Electron
   build: {
     outDir: 'build',
     sourcemap: false, // Отключаем source maps для скорости
@@ -16,6 +17,10 @@ export default defineConfig({
           echarts: ['echarts', 'echarts-for-react'],
           vendor: ['react', 'react-dom'],
         },
+        // Используем relative пути для assets
+        assetFileNames: 'assets/[name]-[hash][extname]',
+        chunkFileNames: 'assets/[name]-[hash].js',
+        entryFileNames: 'assets/[name]-[hash].js',
       },
     },
     chunkSizeWarningLimit: 1000, // Увеличиваем лимит предупреждения

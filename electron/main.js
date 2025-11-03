@@ -1,20 +1,13 @@
 const { app, BrowserWindow } = require('electron');
 const path = require('path');
 const url = require('url');
+const isDev = process.env.NODE_ENV === 'development';
 
 require('@electron/remote/main').initialize();
 
-// Исправление пути к ICU данным для упакованного приложения
-if (process.env.NODE_ENV === 'production' || app.isPackaged) {
-    // Устанавливаем путь к ресурсам Electron
-    // const appPath = app.getAppPath();
+// Отключаем предупреждения безопасности в production
+if (!isDev) {
     process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = 'true';
-    
-    // Для Windows, когда приложение упаковано
-    if (process.platform === 'win32') {
-        const basePath = path.dirname(app.getPath('exe'));
-        app.setPath('userData', path.join(basePath, 'userData'));
-    }
 }
 
 function createWindow() {
@@ -22,20 +15,27 @@ function createWindow() {
         width: 1300,
         height: 800,
         webPreferences: {
-            nodeIntegration: true ,
-            enableRemoteModules: true
+            nodeIntegration: true,
+            enableRemoteModules: true,
+            contextIsolation: false
         }
     });
 
-    const startUrl = process.env.ELECTRON_START_URL || url.format({
-        pathname: path.join(__dirname, '../build/index.html'),
-        protocol: 'file:',
-        slashes: true,
-    });
-
-    mainWindow.loadURL(startUrl);
-
-    // mainWindow.webContents.openDevTools(); // для отладки
+    // Правильная загрузка в зависимости от режима
+    if (isDev) {
+        // В разработке используем dev server
+        const startUrl = process.env.ELECTRON_START_URL || 'http://localhost:3000';
+        mainWindow.loadURL(startUrl);
+        // mainWindow.webContents.openDevTools(); // для отладки
+    } else {
+        // В production загружаем из упакованного приложения
+        const startUrl = url.format({
+            pathname: path.join(__dirname, '../build/index.html'),
+            protocol: 'file:',
+            slashes: true,
+        });
+        mainWindow.loadURL(startUrl);
+    }
 }
 
 app.whenReady().then(createWindow);

@@ -82,13 +82,10 @@
     },
     "files": [
       "build/**/*",
-      "electron/main.js",
+      "electron/**/*",
       "node_modules/**/*",
       "package.json"
     ],
-    "extraMetadata": {
-      "main": "electron/main.js"
-    },
     "asar": true,
     "asarUnpack": [
       "node_modules/**/*.node"
