@@ -10,6 +10,8 @@ if (!isDev) {
     process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = 'true';
 }
 
+console.log('првоерка')
+
 function createWindow() {
     const mainWindow = new BrowserWindow({
         width: 1300,
