@@ -10,9 +10,6 @@ if (!isDev) {
     process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = 'true';
 }
 
-process.env.ELECTRON_DEFAULT_ERROR_MODE = '0';
-process.env.ELECTRON_DISABLE_GPU = '1';
-
 function createWindow() {
     const mainWindow = new BrowserWindow({
         width: 1300,
