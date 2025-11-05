@@ -58,13 +58,17 @@ jobs:
       - name: Build web app
         run: npm run build
 
-      - name: Build Electron distributables (no publish)
-        run: npm run dist
+      - name: Build Electron distributables with auto-update
+        run: npm run build && electron-builder --publish=onTagOrDraft
         env:
           # Отключаем создание дельта-обновлений для ускорения
           ELECTRON_BUILDER_COMPRESSION_LEVEL: 0
           # Дополнительные переменные для ускорения
           VITE_BUILD_TIME: true
+          # GitHub токен для публикации обновлений
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Для автообновления через GitHub
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload release assets
         uses: softprops/action-gh-release@v2
@@ -77,8 +81,10 @@ jobs:
           files: |
             dist/*/*.exe
             dist/*.exe
+            dist/*.blockmap
+            dist/latest.yml
           overwrite_files: true
           fail_on_unmatched_files: true
-          token: ${{ secrets.RELEASE_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
 
 
