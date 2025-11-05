@@ -59,7 +59,7 @@ jobs:
         run: npm run build
 
       - name: Build Electron distributables with auto-update
-        run: npm run build && electron-builder --publish=onTagOrDraft
+        run: npx electron-builder --publish=onTagOrDraft
         env:
           # Отключаем создание дельта-обновлений для ускорения
           ELECTRON_BUILDER_COMPRESSION_LEVEL: 0
