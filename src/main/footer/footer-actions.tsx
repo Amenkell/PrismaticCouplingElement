@@ -11,7 +11,7 @@ import './footer-actions.css';
 
 const FooterActions: React.FC<IFooterActionsProps> = ({comment, onCommentChange, onButtonClick}) => {
 
-    const handleTextChange = (name: string, value: string) => {
+    const handleTextChange = (_name: string, value: string) => {
         onCommentChange(value);
     };
 

@@ -7,7 +7,7 @@ import './settings-modes.css';
 
 const SettingsModes: React.FC<ISettingsModesProps> = ({modes, modesChange}) => {
 
-    const handleActiveChange = (name: string, value: boolean, index: number | undefined,) => {
+    const handleActiveChange = (_name: string, value: boolean, index: number | undefined,) => {
         const updatedModes = modes.map((mode, i) =>
             i === index ? { ...mode, active: value } : mode
         );
@@ -15,7 +15,7 @@ const SettingsModes: React.FC<ISettingsModesProps> = ({modes, modesChange}) => {
     };
 
     // Обработчик изменения значения режима
-    const handleValueChange = (name: string, value: number, index: number | undefined) => {
+    const handleValueChange = (_name: string, value: number, index: number | undefined) => {
         const updatedModes = modes.map((mode, i) =>
             i === index ? { ...mode, value } : mode
         );

@@ -312,7 +312,7 @@ export function calculatePrismCoupling(params: PrismInputParams): PrismOutputRes
     if (gamma === 0) {
       // Решаем систему для нахождения A и B
       const Q = [
-        [ba.reduce((s, v, i) => s + v * v, 0), F.reduce((s, v, i) => s + v * ba[i], 0)],
+        [ba.reduce((s, v) => s + v * v, 0), F.reduce((s, v, i) => s + v * ba[i], 0)],
         [F.reduce((s, v, i) => s + v * ba[i], 0), F.reduce((s, v) => s + v * v, 0)]
       ];
       const c = [
