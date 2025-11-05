@@ -1,6 +1,6 @@
 {
   "name": "prismatic",
-  "version": "0.4.0",
+  "version": "0.3.0",
   "main": "electron/main.js",
   "homepage": "./",
   "private": true,
@@ -113,11 +113,11 @@
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": false,
-      "runAfterFinish": false,
+      "runAfterFinish": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "allowElevation": true,
-      "include": "installer.nsh"
+      "warningsAsErrors": false
     },
     "linux": {
       "target": "AppImage"

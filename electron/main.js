@@ -1,6 +1,7 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const url = require('url');
+const fs = require('fs');
 const { autoUpdater } = require('electron-updater');
 const isDev = process.env.NODE_ENV === 'development';
 
@@ -117,10 +118,18 @@ autoUpdater.on('update-downloaded', (info) => {
         mainWindow.webContents.send('update-downloaded', info);
     }
     
-    // Автоматически перезапустить после загрузки, даем время показать экран установки
+    // Автоматически перезапустить после загрузки в silent режиме
     setTimeout(() => {
-        autoUpdater.quitAndInstall(true, true);
-    }, 1500);
+        console.log('Installing update in silent mode and restarting...');
+        try {
+            autoUpdater.quitAndInstall(true, true);
+        } catch (error) {
+            console.error('Error during quitAndInstall:', error);
+            if (mainWindow) {
+                mainWindow.webContents.send('update-error', 'Ошибка при установке обновления: ' + error.message);
+            }
+        }
+    }, 2000);
 });
 
 // IPC обработчики для проверки обновлений из рендерера
