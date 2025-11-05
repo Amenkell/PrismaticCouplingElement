@@ -109,9 +109,12 @@ autoUpdater.on('update-downloaded', (info) => {
     }
     
     // Автоматически перезапустить после загрузки, даем время показать экран установки
+    // quitAndInstall(isSilent, isForceRunAfter)
+    // isSilent: true - тихая установка без показа UI установщика
+    // isForceRunAfter: true - принудительно запустить приложение после установки
     setTimeout(() => {
-        autoUpdater.quitAndInstall(false, true);
-    }, 3000);
+        autoUpdater.quitAndInstall(true, true);
+    }, 1500);
 });
 
 // IPC обработчики для проверки обновлений из рендерера

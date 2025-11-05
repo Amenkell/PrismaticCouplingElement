@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { UpdateStatus } from '../ui/update-overlay/update-overlay';
+import {UpdateStatus} from "../models/update.interface.ts";
 
 declare global {
     interface Window {

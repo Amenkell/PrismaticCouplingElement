@@ -108,16 +108,19 @@
         "owner": "Amenkell",
         "repo": "PrismaticCouplingElement",
         "private": false
+      },
+      "nsis": {
+        "oneClick": false,
+        "allowToChangeInstallationDirectory": false,
+        "runAfterFinish": true,
+        "createDesktopShortcut": true,
+        "createStartMenuShortcut": true,
+        "allowElevation": true,
+        "include": "installer.nsh"
       }
     },
     "linux": {
       "target": "AppImage"
-    },
-    "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true,
-      "createDesktopShortcut": true,
-      "createStartMenuShortcut": true
     }
   }
 }
