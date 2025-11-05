@@ -133,8 +133,7 @@ const App = () => {
         const wsModes = XLSX.utils.aoa_to_sheet(modesSheetData);
 
         const profileSheetData = [['z (мкм)', 'Δne']];
-        const maxRows = Math.min(results.z.length, 2000);
-        for (let i = 0; i < maxRows; i++) {
+        for (let i = 0; i < results.z.length; i++) {
             const zVal = results.z[i].toFixed(6);
             const dneVal = (results.N[i] - inputParams.Ne).toFixed(6);
             profileSheetData.push([zVal, dneVal]);

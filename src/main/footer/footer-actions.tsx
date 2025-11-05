@@ -28,6 +28,7 @@ const FooterActions: React.FC<IFooterActionsProps> = ({comment, onCommentChange,
                     Помощь
                 </CustomButton>
                 <CustomButton
+                    disabled
                     onClick={() => handleButtonAction(ButtonActions.upload)} variant={buttonVariants.primary}>
                     Загрузить
                 </CustomButton>
