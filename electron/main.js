@@ -8,10 +8,7 @@ require('@electron/remote/main').initialize();
 
 // Настройка автообновления
 if (!isDev) {
-    // Настройка автоматической загрузки и установки
-  autoUpdater.setAutoDownload(true);
-  autoUpdater.setAutoInstallOnAppQuit(true);
-
+  // Настройка автоматической загрузки и установки (используем свойства, не методы)
   autoUpdater.autoDownload = true;
   autoUpdater.autoInstallOnAppQuit = true;
 }
