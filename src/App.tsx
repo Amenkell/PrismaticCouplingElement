@@ -59,6 +59,7 @@ const App = () => {
   }, []);
 
     const performCalculation = useCallback(() => {
+        console.log('тест')
         if (!settings) {
             showAlert('Настройки не заданы', 'Ошибка');
             return;
