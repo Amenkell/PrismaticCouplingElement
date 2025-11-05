@@ -36,7 +36,7 @@ function createWindow() {
         // В разработке используем dev server
         const startUrl = process.env.ELECTRON_START_URL || 'http://localhost:3000';
         mainWindow.loadURL(startUrl);
-        // mainWindow.webContents.openDevTools(); // для отладки
+        mainWindow.webContents.openDevTools(); // для отладки
     } else {
         // В production загружаем из упакованного приложения
         const startUrl = url.format({
@@ -45,7 +45,16 @@ function createWindow() {
             slashes: true,
         });
         mainWindow.loadURL(startUrl);
+        // В production можно открыть DevTools нажатием F12 или Ctrl+Shift+I
+        // mainWindow.webContents.openDevTools(); // раскомментируйте для отладки в production
     }
+
+    // Горячие клавиши для открытия DevTools (F12 или Ctrl+Shift+I)
+    mainWindow.webContents.on('before-input-event', (event, input) => {
+        if (input.key === 'F12' || (input.control && input.shift && input.key === 'I')) {
+            mainWindow.webContents.toggleDevTools();
+        }
+    });
 
     // Проверка обновлений после загрузки окна
     if (!isDev) {

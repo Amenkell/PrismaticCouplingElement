@@ -65,12 +65,17 @@ export const useAutoUpdater = () => {
         };
 
         const handleAvailable = (info: { version: string }) => {
-            setUpdateStatus(prev => ({
-                ...prev,
-                isChecking: false,
-                isDownloading: true,
-                version: info.version,
-            }));
+            console.log('Update available, starting download:', info.version);
+            setUpdateStatus(prev => {
+                console.log('Setting download state, prev:', prev);
+                return {
+                    isChecking: false,
+                    isDownloading: true,
+                    isInstalling: false,
+                    version: info.version,
+                    error: undefined, // Очищаем предыдущие ошибки
+                };
+            });
         };
 
         const handleNotAvailable = () => {
@@ -83,14 +88,22 @@ export const useAutoUpdater = () => {
         };
 
         const handleError = (_event: any, message: string) => {
-            setUpdateStatus(prev => ({
-                ...prev,
-                isChecking: false,
-                isDownloading: false,
-                isInstalling: false,
-                error: message,
-            }));
-            setCheckCompleted(true);
+            console.error('Update error:', message);
+            setUpdateStatus(prev => {
+                const wasDownloading = prev.isDownloading;
+                // Помечаем проверку как завершенную только если не было скачивания
+                // Если было скачивание, ошибка может быть временной
+                if (!wasDownloading) {
+                    setCheckCompleted(true);
+                }
+                return {
+                    ...prev,
+                    isChecking: false,
+                    isDownloading: false,
+                    isInstalling: false,
+                    error: message,
+                };
+            });
         };
 
         const handleProgress = (_event: any, progressObj: {
@@ -99,10 +112,18 @@ export const useAutoUpdater = () => {
             total: number;
             bytesPerSecond: number;
         }) => {
-            setUpdateStatus(prev => ({
-                ...prev,
-                progress: progressObj,
-            }));
+            console.log('Download progress:', progressObj.percent + '%');
+            setUpdateStatus(prev => {
+                // Убеждаемся, что isDownloading установлен
+                if (!prev.isDownloading) {
+                    console.warn('Received download-progress but isDownloading was false');
+                }
+                return {
+                    ...prev,
+                    isDownloading: true, // Убеждаемся, что флаг установлен
+                    progress: progressObj,
+                };
+            });
         };
 
         const handleDownloaded = (_event: any, info: { version: string }) => {
@@ -135,6 +156,18 @@ export const useAutoUpdater = () => {
     }, []);
 
     const isUpdating = updateStatus.isChecking || updateStatus.isDownloading || updateStatus.isInstalling;
+
+    // Логируем состояние для отладки
+    useEffect(() => {
+        console.log('Update state:', {
+            isChecking: updateStatus.isChecking,
+            isDownloading: updateStatus.isDownloading,
+            isInstalling: updateStatus.isInstalling,
+            isUpdating,
+            checkCompleted,
+            hasError: !!updateStatus.error,
+        });
+    }, [updateStatus.isChecking, updateStatus.isDownloading, updateStatus.isInstalling, isUpdating, checkCompleted, updateStatus.error]);
 
     return {
         updateStatus,

@@ -228,13 +228,13 @@ const App = () => {
         }
     }, [performCalculation, exportResults, showAlert]);
 
+  // Показываем оверлей если идет обновление или проверка еще не завершена
+  const showUpdateOverlay = isUpdating || !checkCompleted;
+
   return (
       <div className={'app__body'}>
-          {isUpdating && <UpdateOverlay status={updateStatus} />}
-          {!checkCompleted && !isUpdating && (
-              <UpdateOverlay status={{ isChecking: true, isDownloading: false, isInstalling: false }} />
-          )}
-          {checkCompleted && !isUpdating && (
+          {showUpdateOverlay && <UpdateOverlay status={updateStatus} />}
+          {!showUpdateOverlay && (
               <>
                   <div>
                       <div className="app__header">
