@@ -1,6 +1,8 @@
 import React, {useState, useCallback, useRef} from 'react';
 import './App.css';
 import ModalAlert from './main/ui/modal-alert/modal-alert';
+import UpdateOverlay from './main/ui/update-overlay/update-overlay';
+import {useAutoUpdater} from './main/custom-hooks/useAutoUpdater';
 import GraphSettings from "./main/settings-plot/settings-main";
 import {GraphSettingsType} from "./main/settings-plot/graph.interface";
 import FooterActions from "./main/footer/footer-actions";
@@ -15,6 +17,7 @@ import {calculateNeffFromAngles, parseIfDMS} from "./main/utils/angle-to-neff";
 import {CalculationResults, PrismInputParams} from "./main/models/prism.interface";
 
 const App = () => {
+    const { updateStatus, isUpdating } = useAutoUpdater();
 
     const [comment, setComment] = useState('');
     const [modes, onChangeModes] = useState<IMode[]>([
@@ -216,6 +219,7 @@ const App = () => {
 
   return (
       <div className={'app__body'}>
+          {isUpdating && <UpdateOverlay status={updateStatus} />}
           <div>
               <h1>Расчёт призменного элемента связи</h1>
               <GraphSettings

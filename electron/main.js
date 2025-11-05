@@ -108,10 +108,10 @@ autoUpdater.on('update-downloaded', (info) => {
         mainWindow.webContents.send('update-downloaded', info);
     }
     
-    // Автоматически перезапустить после загрузки
+    // Автоматически перезапустить после загрузки, даем время показать экран установки
     setTimeout(() => {
         autoUpdater.quitAndInstall(false, true);
-    }, 1000);
+    }, 3000);
 });
 
 // IPC обработчики для проверки обновлений из рендерера
