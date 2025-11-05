@@ -1,5 +1,5 @@
 {
-  "name": "untitled1",
+  "name": "prismatic",
   "version": "0.3.0",
   "main": "electron/main.js",
   "homepage": "./",
@@ -113,7 +113,7 @@
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": false,
-      "runAfterFinish": true,
+      "runAfterFinish": false,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "allowElevation": true,
