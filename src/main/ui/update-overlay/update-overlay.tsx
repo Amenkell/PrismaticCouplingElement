@@ -3,21 +3,6 @@ import './update-overlay.css';
 import {UpdateOverlayProps} from "../../models/update.interface.ts";
 
 const UpdateOverlay: React.FC<UpdateOverlayProps> = ({ status }) => {
-    const getStatusText = () => {
-        if (status.error) {
-            return 'Ошибка при обновлении';
-        }
-        if (status.isInstalling) {
-            return 'Установка обновления...';
-        }
-        if (status.isDownloading) {
-            return 'Скачивание обновления...';
-        }
-        if (status.isChecking) {
-            return 'Проверка обновлений...';
-        }
-        return 'Обновление...';
-    };
 
     const getProgressText = () => {
         if (status.progress) {
@@ -26,9 +11,32 @@ const UpdateOverlay: React.FC<UpdateOverlayProps> = ({ status }) => {
             const totalMB = (status.progress.total / 1024 / 1024).toFixed(2);
             const speedMBps = (status.progress.bytesPerSecond / 1024 / 1024).toFixed(2);
             
-            return `${percent}% (${transferredMB} MB / ${totalMB} MB) - ${speedMBps} MB/s`;
+            const packageInfo = status.isDelta || status.packageType === 'delta' 
+                ? ' (только изменения)' 
+                : ' (полное обновление)';
+            
+            return `${percent}% (${transferredMB} MB / ${totalMB} MB)${packageInfo} - ${speedMBps} MB/s`;
         }
         return '';
+    };
+    
+    const getStatusText = () => {
+        if (status.error) {
+            return 'Ошибка при обновлении';
+        }
+        if (status.isInstalling) {
+            return 'Установка обновления...';
+        }
+        if (status.isDownloading) {
+            const packageInfo = status.isDelta || status.packageType === 'delta' 
+                ? ' (только изменения)' 
+                : '';
+            return `Скачивание обновления${packageInfo}...`;
+        }
+        if (status.isChecking) {
+            return 'Проверка обновлений...';
+        }
+        return 'Обновление...';
     };
 
     return (

@@ -10,6 +10,8 @@ export interface UpdateStatus {
     };
     version?: string;
     error?: string;
+    packageType?: 'delta' | 'full';
+    isDelta?: boolean;
 }
 
 export interface UpdateOverlayProps {

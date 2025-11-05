@@ -85,8 +85,16 @@ autoUpdater.on('checking-for-update', () => {
 
 autoUpdater.on('update-available', (info) => {
     console.log('Update available:', info.version);
+    console.log('Update info:', JSON.stringify(info, null, 2));
+    // Определяем тип пакета: если есть files с delta, значит это дифференциальное обновление
+    const isDelta = info.files && info.files.some(file => file.url && file.url.includes('-delta'));
+    const updateInfo = {
+        ...info,
+        isDelta: isDelta,
+        packageType: isDelta ? 'delta' : 'full'
+    };
     if (mainWindow) {
-        mainWindow.webContents.send('update-available', info);
+        mainWindow.webContents.send('update-available', updateInfo);
     }
 });
 

@@ -64,8 +64,9 @@ export const useAutoUpdater = () => {
             });
         };
 
-        const handleAvailable = (info: { version: string }) => {
+        const handleAvailable = (info: { version: string; isDelta?: boolean; packageType?: 'delta' | 'full' }) => {
             console.log('Update available, starting download:', info.version);
+            console.log('Package type:', info.packageType || (info.isDelta ? 'delta' : 'full'));
             setUpdateStatus(prev => {
                 console.log('Setting download state, prev:', prev);
                 return {
@@ -74,6 +75,8 @@ export const useAutoUpdater = () => {
                     isInstalling: false,
                     version: info.version,
                     error: undefined, // Очищаем предыдущие ошибки
+                    packageType: info.packageType || (info.isDelta ? 'delta' : 'full'),
+                    isDelta: info.isDelta,
                 };
             });
         };

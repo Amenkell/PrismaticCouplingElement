@@ -51,6 +51,9 @@ jobs:
             npx commitlint --from HEAD --to HEAD --verbose
           fi
 
+      - name: TypeScript type check
+        run: npx tsc --noEmit
+
       - name: Run tests (CI mode)
         run: npm run test -- --run
 

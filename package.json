@@ -1,6 +1,6 @@
 {
   "name": "prismatic",
-  "version": "0.4.0",
+  "version": "0.1.0",
   "main": "electron/main.js",
   "homepage": "./",
   "private": true,
@@ -117,7 +117,8 @@
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "allowElevation": true,
-      "warningsAsErrors": false
+      "warningsAsErrors": false,
+      "differentialPackage": true
     },
     "linux": {
       "target": "AppImage"
