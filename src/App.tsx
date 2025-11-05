@@ -15,9 +15,20 @@ import ExcelJS from 'exceljs';
 import {calculatePrismCoupling} from "./main/utils/prism-calculations";
 import {calculateNeffFromAngles, parseIfDMS} from "./main/utils/angle-to-neff";
 import {CalculationResults, PrismInputParams} from "./main/models/prism.interface";
+import {getAppVersion, getAppVersionAsync} from "./main/utils/app-version";
 
 const App = () => {
-    const { updateStatus, isUpdating } = useAutoUpdater();
+    const { updateStatus, isUpdating, checkCompleted } = useAutoUpdater();
+    const [appVersion, setAppVersion] = useState<string>(getAppVersion());
+
+    // Получаем актуальную версию асинхронно при монтировании
+    React.useEffect(() => {
+        getAppVersionAsync().then(version => {
+            if (version) {
+                setAppVersion(version);
+            }
+        });
+    }, []);
 
     const [comment, setComment] = useState('');
     const [modes, onChangeModes] = useState<IMode[]>([
@@ -220,29 +231,39 @@ const App = () => {
   return (
       <div className={'app__body'}>
           {isUpdating && <UpdateOverlay status={updateStatus} />}
-          <div>
-              <h1>Расчёт призменного элемента связи</h1>
-              <GraphSettings
-                  onSettingsChange={handleSettingsChange}
-              />
-          </div>
-          <div>
-              <PlotGraph
-                  results={calculationResults}
-                  showModesPoints={settings?.modesPoints ?? false}
-                  onGetChartDataUrlRef={handleChartGetterRef}
-              />
-          </div>
-          <div className={'app__action-container'}>
-              <SettingsModes modes={modes} modesChange={onChangeModes}/>
-              <FooterActions comment={comment} onCommentChange={setComment} onButtonClick={handleButtonClick}/>
-          </div>
-          <ModalAlert
-              open={alertOpen}
-              title={alertTitle}
-              message={alertMessage}
-              onClose={() => setAlertOpen(false)}
-          />
+          {!checkCompleted && !isUpdating && (
+              <UpdateOverlay status={{ isChecking: true, isDownloading: false, isInstalling: false }} />
+          )}
+          {checkCompleted && !isUpdating && (
+              <>
+                  <div>
+                      <div className="app__header">
+                          <h1>Расчёт призменного элемента связи</h1>
+                          <span className="app__version">v{appVersion}</span>
+                      </div>
+                      <GraphSettings
+                          onSettingsChange={handleSettingsChange}
+                      />
+                  </div>
+                  <div>
+                      <PlotGraph
+                          results={calculationResults}
+                          showModesPoints={settings?.modesPoints ?? false}
+                          onGetChartDataUrlRef={handleChartGetterRef}
+                      />
+                  </div>
+                  <div className={'app__action-container'}>
+                      <SettingsModes modes={modes} modesChange={onChangeModes}/>
+                      <FooterActions comment={comment} onCommentChange={setComment} onButtonClick={handleButtonClick}/>
+                  </div>
+                  <ModalAlert
+                      open={alertOpen}
+                      title={alertTitle}
+                      message={alertMessage}
+                      onClose={() => setAlertOpen(false)}
+                  />
+              </>
+          )}
       </div>
   );
 };

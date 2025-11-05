@@ -57,9 +57,9 @@ function createWindow() {
 
 // Функция проверки обновлений
 function checkForUpdates() {
-    if (isDev) {
-        return;
-    }
+    // if (isDev) {
+    //     return;
+    // }
 
     autoUpdater.checkForUpdates().catch(err => {
         console.error('Error checking for updates:', err);
@@ -109,9 +109,6 @@ autoUpdater.on('update-downloaded', (info) => {
     }
     
     // Автоматически перезапустить после загрузки, даем время показать экран установки
-    // quitAndInstall(isSilent, isForceRunAfter)
-    // isSilent: true - тихая установка без показа UI установщика
-    // isForceRunAfter: true - принудительно запустить приложение после установки
     setTimeout(() => {
         autoUpdater.quitAndInstall(true, true);
     }, 1500);
@@ -124,6 +121,11 @@ ipcMain.on('check-for-updates', () => {
 
 ipcMain.on('install-update', () => {
     autoUpdater.quitAndInstall(false, true);
+});
+
+// IPC обработчик для получения версии приложения
+ipcMain.handle('get-app-version', () => {
+    return app.getVersion();
 });
 
 app.whenReady().then(createWindow);

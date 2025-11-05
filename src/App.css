@@ -16,8 +16,26 @@
   align-items: flex-start;
 }
 
+.app__header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
 h1 {
   text-align: center;
+  margin: 0;
+}
+
+.app__version {
+  font-size: 14px;
+  color: #666;
+  font-weight: normal;
+  padding: 4px 8px;
+  background: #f0f0f0;
+  border-radius: 4px;
 }
 
 .app__osago {

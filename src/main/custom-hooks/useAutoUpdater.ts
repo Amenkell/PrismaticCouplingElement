@@ -8,13 +8,9 @@ declare global {
 }
 
 const getIpcRenderer = () => {
-    try {
-        if (typeof window !== 'undefined' && window.require) {
-            const electron = window.require('electron');
-            return electron?.ipcRenderer || null;
-        }
-    } catch (e) {
-        // Не в Electron окружении
+    if (typeof window !== 'undefined' && window.require) {
+        const electron = window.require('electron');
+        return electron?.ipcRenderer || null;
     }
     return null;
 };
@@ -23,15 +19,42 @@ const ipcRenderer = getIpcRenderer();
 
 export const useAutoUpdater = () => {
     const [updateStatus, setUpdateStatus] = useState<UpdateStatus>({
-        isChecking: false,
+        isChecking: true, // Начинаем с проверки, чтобы показывать оверлей сразу
         isDownloading: false,
         isInstalling: false,
     });
+    const [checkCompleted, setCheckCompleted] = useState(false);
 
     useEffect(() => {
         if (!ipcRenderer) {
+            // Если не в Electron окружении, сразу помечаем проверку как завершенную
+            setCheckCompleted(true);
+            setUpdateStatus({
+                isChecking: false,
+                isDownloading: false,
+                isInstalling: false,
+            });
             return;
         }
+
+        // Таймаут на случай, если проверка не начнется в течение 10 секунд
+        const timeoutId = setTimeout(() => {
+            setCheckCompleted(prev => {
+                if (!prev) {
+                    setUpdateStatus(prevStatus => {
+                        if (prevStatus.isChecking) {
+                            return {
+                                ...prevStatus,
+                                isChecking: false,
+                            };
+                        }
+                        return prevStatus;
+                    });
+                    return true;
+                }
+                return prev;
+            });
+        }, 10000);
 
         const handleChecking = () => {
             setUpdateStatus({
@@ -56,6 +79,7 @@ export const useAutoUpdater = () => {
                 isDownloading: false,
                 isInstalling: false,
             });
+            setCheckCompleted(true);
         };
 
         const handleError = (_event: any, message: string) => {
@@ -66,6 +90,7 @@ export const useAutoUpdater = () => {
                 isInstalling: false,
                 error: message,
             }));
+            setCheckCompleted(true);
         };
 
         const handleProgress = (_event: any, progressObj: {
@@ -97,6 +122,7 @@ export const useAutoUpdater = () => {
         ipcRenderer.on('update-downloaded', handleDownloaded);
 
         return () => {
+            clearTimeout(timeoutId);
             if (ipcRenderer) {
                 ipcRenderer.removeListener('update-checking', handleChecking);
                 ipcRenderer.removeListener('update-available', handleAvailable);
@@ -113,6 +139,7 @@ export const useAutoUpdater = () => {
     return {
         updateStatus,
         isUpdating,
+        checkCompleted,
     };
 };
 
