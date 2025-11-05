@@ -4,6 +4,10 @@
     gap: 16px;
 }
 
+.settings-modes__delete-btn {
+    margin-left: auto;
+}
+
 .settings-modes__container {
     width: 100%;
     background: white;

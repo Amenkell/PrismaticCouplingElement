@@ -3,6 +3,8 @@ import {ISettingsModesProps} from "./settings-modes.interface";
 import Checkbox from "../controls/checkbox/checkbox";
 import NumberInput from "../controls/number-input/number-input";
 import CustomButton from "../controls/button/button";
+import IconButton from "../controls/icon-button/icon-button";
+import {TrashIcon} from "../controls/icon-button/icons";
 import './settings-modes.css';
 
 const SettingsModes: React.FC<ISettingsModesProps> = ({modes, modesChange}) => {
@@ -28,6 +30,15 @@ const SettingsModes: React.FC<ISettingsModesProps> = ({modes, modesChange}) => {
         modesChange?.(updatedModes);
     };
 
+    const handleDeleteMode = (index: number) => {
+        // Не позволяем удалить, если останется меньше 1 моды
+        if (modes.length <= 1) {
+            return;
+        }
+        const updatedModes = modes.filter((_, i) => i !== index);
+        modesChange?.(updatedModes);
+    };
+
     return (
         <div className={'settings-modes__container'}>
             <div className={'settings-modes__modes-block'}>
@@ -37,6 +48,15 @@ const SettingsModes: React.FC<ISettingsModesProps> = ({modes, modesChange}) => {
                         <div className={'settings-modes__item'} key={index}>
                             <Checkbox title={`Mode ${index + 1}`} value={mode.active} onChange={handleActiveChange} index={index} />
                             <NumberInput value={mode.value} onChange={handleValueChange} index={index} />
+                            <IconButton
+                                variant="delete"
+                                onClick={() => handleDeleteMode(index)}
+                                title="Удалить mode"
+                                disabled={modes.length <= 1}
+                                className="settings-modes__delete-btn"
+                            >
+                                <TrashIcon />
+                            </IconButton>
                         </div>
                     ))}
                 </div>

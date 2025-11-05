@@ -139,18 +139,18 @@ const App = () => {
         ];
         const wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
 
-        const modesSheetData = [['z (мкм)', 'Neff Modes']];
+        const modesSheetData: [string | number, string | number][] = [['z (мкм)', 'Neff Modes']];
         for (let i = 0; i < results.zm.length; i++) {
-            const zVal = results.zm[i].toFixed(6);
-            const dneVal = results.Nm[i].toFixed(6);
+            const zVal = Number(results.zm[i].toFixed(6));
+            const dneVal = Number(results.Nm[i].toFixed(6));
             modesSheetData.push([zVal, dneVal]);
         }
         const wsModes = XLSX.utils.aoa_to_sheet(modesSheetData);
 
-        const profileSheetData = [['z (мкм)', 'Δne']];
+        const profileSheetData: [string | number, string | number][] = [['z (мкм)', 'Δne']];
         for (let i = 0; i < results.z.length; i++) {
-            const zVal = results.z[i].toFixed(6);
-            const dneVal = (results.N[i] - inputParams.Ne).toFixed(6);
+            const zVal = Number(results.z[i].toFixed(6));
+            const dneVal = Number((results.N[i] - inputParams.Ne).toFixed(6));
             profileSheetData.push([zVal, dneVal]);
         }
         const wsProfile = XLSX.utils.aoa_to_sheet(profileSheetData);
