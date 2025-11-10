@@ -47,4 +47,5 @@ export interface CalculationResults {
     prismResults: PrismOutputResult | null;
     isCalculated: boolean;
     timestamp: Date;
+    hValue: number | null;
 }

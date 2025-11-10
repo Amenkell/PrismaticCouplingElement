@@ -191,6 +191,7 @@ const PlotGraph: React.FC<PlotGraphProps> = ({ results, showModesPoints, onGetCh
                     <div>{strings.summaryGamma} = {results.prismResults.calculatedGamma.toFixed(4)}</div>
                     <div>{strings.summaryN0} = {results.prismResults.n0.toFixed(4)}</div>
                     <div>{strings.summaryDeltaN0} = {(results.prismResults.N[0] - results.NeNeff).toFixed(6)}</div>
+                    <div>{strings.summaryH} = {results.hValue !== null ? results.hValue.toFixed(6) : '-'}</div>
                 </div>
             )}
             <ReactECharts

@@ -21,6 +21,7 @@ export interface PlotGraphProps {
         summaryGamma?: string;
         summaryN0?: string;
         summaryDeltaN0?: string;
+        summaryH?: string;
     };
 }
 
@@ -38,5 +39,6 @@ export const DEFAULT_I18N = {
     summaryAlpha: 'α',
     summaryGamma: 'B/A',
     summaryN0: 'n₀ (поверхность)',
-    summaryDeltaN0: 'Δn₀'
+    summaryDeltaN0: 'Δnₑ',
+    summaryH: 'h'
 } as const;
