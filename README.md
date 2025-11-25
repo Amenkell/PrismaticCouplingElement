@@ -1,46 +1,75 @@
-# Getting Started with Create React App
+# Программа расчёта призменного элемента связи
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Приложение на React + TypeScript + Electron для расчёта эффективного показателя преломления при призменном вводе излучения в планарный волновод.
 
-## Available Scripts
+## 📋 Описание
 
-In the project directory, you can run:
+Программа портирована с MATLAB (Profil.m, Optic1_2.m) и предназначена для:
+- Расчёта профиля показателя преломления в планарном волноводе
+- Определения эффективных показателей преломления мод
+- Аппроксимации профиля с параметрами α (альфа) и B/A
+- Визуализации результатов на графиках
+- Экспорта данных в текстовые файлы
 
-### `npm start`
+## 🚀 Быстрый старт
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+### Установка зависимостей
+```bash
+npm install
+```
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+### Запуск в режиме разработки (Web)
+```bash
+npm start
+```
+Откроется браузер на `http://localhost:3000`
 
-### `npm test`
+### Запуск Electron приложения
+```bash
+npm run start-elec
+```
+Запустится веб-сервер и Electron приложение
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### Сборка Electron приложения
+```bash
+npm run dist
+```
+Создаст установщик в папке `dist/`
 
-### `npm run build`
+## 🔧 Основные возможности
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### Входные параметры:
+- **Показатель преломления призмы** - для ввода излучения
+- **Показатель преломления подложки** - материал волновода
+- **Показатель преломления объёма** - окружающая среда (воздух)
+- **Эффективные показатели преломления мод (Neff)** - набор значений для каждой моды
+- **α (альфа)** - степень аппроксимации профиля (-100 для автооптимизации)
+- **B/A (гамма)** - отношение параметров (0 для автооптимизации)
+- **Поляризация** - TE или TM
+- **Угол призмы** - геометрический угол призмы (поддерживает DMS формат: 045°30'15")
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### Выходные данные:
+- Профиль показателя преломления Δn_e(z) по глубине
+- Рассчитанные значения α и B/A
+- Показатель преломления на поверхности (n₀)
+- График с визуализацией профиля и положения мод
+- Текстовый файл с результатами
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## 🧪 Формат коммитов
 
-### `npm run eject`
+Проект использует Conventional Commits. Подробности: [README-COMMITS.md](./README-COMMITS.md)
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+Для создания коммита:
+```bash
+npm run commit
+```
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+## 🔬 Математическая модель
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+Программа реализует решение обратной задачи: по известным значениям эффективных показателей преломления мод находит профиль показателя преломления волновода.
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
+Основные методы:
+- Метод Ньютона для оптимизации
+- Решение систем линейных уравнений (метод Гаусса)
+- Численное интегрирование профиля
+- Гамма-функция (приближение Ланцоша)

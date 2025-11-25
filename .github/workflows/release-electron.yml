@@ -5,6 +5,11 @@ on:
     tags:
       - 'v*.*.*'
   workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Тег для обновления (например v1.2.3)'
+        required: true
+        type: string
 
 permissions:
   contents: write
@@ -23,24 +28,69 @@ jobs:
           node-version: 20
           cache: npm
 
+      # Кэширование node_modules для ускорения установки зависимостей
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        id: cache-node-modules
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-modules-
+
+      # Кэширование build артефактов для Vite
+      - name: Cache build artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            .vite
+            build
+            node_modules/.vite
+          key: ${{ runner.os }}-vite-build-${{ hashFiles('**/package-lock.json') }}-${{ hashFiles('src/**') }}
+          restore-keys: |
+            ${{ runner.os }}-vite-build-${{ hashFiles('**/package-lock.json') }}-
+            ${{ runner.os }}-vite-build-
+
       - name: Install dependencies
-        run: npm ci
+        if: steps.cache-node-modules.outputs.cache-hit != 'true'
+        run: npm ci --prefer-offline --no-audit
 
       - name: Build web app
         run: npm run build
 
-      - name: Build Electron distributables (no publish)
-        run: npm run dist
+      - name: Build Electron distributables with auto-update
+        run: npx electron-builder --publish=onTagOrDraft
+        env:
+          VITE_BUILD_TIME: true
+          # GitHub токен для публикации обновлений
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Для автообновления через GitHub
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: List built files (for debugging)
+        if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
+        run: |
+          Write-Host "=== Files in dist directory ==="
+          Get-ChildItem -Path dist -Recurse -File | ForEach-Object {
+            Write-Host "$($_.FullName) - $([math]::Round($_.Length/1MB, 2)) MB"
+          }
 
       - name: Upload release assets
         uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
         with:
+          tag_name: ${{ github.event_name == 'workflow_dispatch' && inputs.tag_name || github.ref_name }}
           generate_release_notes: true
           draft: false
           prerelease: false
           files: |
-            dist/**/*
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            dist/*.exe
+            dist/*-delta.exe
+            dist/*.blockmap
+            dist/*-delta.blockmap
+            dist/latest.yml
+          overwrite_files: true
+          fail_on_unmatched_files: false
+          token: ${{ secrets.GITHUB_TOKEN }}
 
 

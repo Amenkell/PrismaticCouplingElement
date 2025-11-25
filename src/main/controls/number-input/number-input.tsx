@@ -1,4 +1,4 @@
-import React, {memo, useId} from "react";
+import React, {memo, useId, useState} from "react";
 import './number-input.css';
 
 interface NumberInputProps {
@@ -16,21 +16,43 @@ interface NumberInputProps {
 
 const NumberInput: React.FC<NumberInputProps> = ({ value, propertyName, onChange, title, placeholder, disabled, min, max, step, index }) => {
     const id = useId();
+    const [displayValue, setDisplayValue] = useState<string>(value.toString());
+
+    const parseNumber = (str: string): number => {
+        if (str === "" || str === "-" || str === ".") return NaN;
+        // Заменяем запятую на точку для корректного парсинга
+        const normalized = str.replace(/,/g, '.');
+        return parseFloat(normalized);
+    };
 
     const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const raw = event.target.value;
-        const next: number = raw === "" ? 0 : Number(raw);
-        const property = propertyName ?? '';
-        onChange(property, next, index);
+        setDisplayValue(raw);
+
+        const parsed = parseNumber(raw);
+        if (!isNaN(parsed)) {
+            const property = propertyName ?? '';
+            onChange(property, parsed, index);
+        }
     };
 
-    const handleBlur = (event: React.FocusEvent<HTMLInputElement>) => {
-        const raw = event.target.value;
-        if (raw === "") {
-            // on blur, normalize empty to NaN or 0 as needed; here we choose 0 for simplicity
-            const property = propertyName ?? '';
-            onChange(property, 0);
-        }
+    const handleBlur = () => {
+        const parsed = parseNumber(displayValue);
+        let finalValue = isNaN(parsed) ? 0 : parsed;
+
+        if (min !== undefined && finalValue < min) finalValue = min;
+        if (max !== undefined && finalValue > max) finalValue = max;
+
+        const property = propertyName ?? '';
+        onChange(property, finalValue, index);
+
+        setDisplayValue(formatDisplay(finalValue));
+    };
+
+    const formatDisplay = (num: number): string => {
+        if (isNaN(num)) return "";
+
+        return num.toString();
     };
 
     return (
@@ -38,8 +60,8 @@ const NumberInput: React.FC<NumberInputProps> = ({ value, propertyName, onChange
             {title}
             <input
                 id={id}
-                type="number"
-                value={value}
+                type="text"
+                value={displayValue}
                 onChange={handleInputChange}
                 onBlur={handleBlur}
                 placeholder={placeholder}

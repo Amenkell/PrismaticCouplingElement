@@ -11,7 +11,7 @@ import './footer-actions.css';
 
 const FooterActions: React.FC<IFooterActionsProps> = ({comment, onCommentChange, onButtonClick}) => {
 
-    const handleTextChange = (name: string, value: string) => {
+    const handleTextChange = (_name: string, value: string) => {
         onCommentChange(value);
     };
 
@@ -28,12 +28,13 @@ const FooterActions: React.FC<IFooterActionsProps> = ({comment, onCommentChange,
                     Помощь
                 </CustomButton>
                 <CustomButton
-                    onClick={() => handleButtonAction(ButtonActions.download)} variant={buttonVariants.primary}>
+                    disabled
+                    onClick={() => handleButtonAction(ButtonActions.upload)} variant={buttonVariants.primary}>
                     Загрузить
                 </CustomButton>
                 <CustomButton
-                    onClick={() => handleButtonAction(ButtonActions.write)} variant={buttonVariants.primary}>
-                    Записать
+                    onClick={() => handleButtonAction(ButtonActions.download)} variant={buttonVariants.primary}>
+                    Скачать
                 </CustomButton>
                 <CustomButton
                     onClick={() => handleButtonAction(ButtonActions.edit)} variant={buttonVariants.primary}>
